@@ -1,0 +1,21 @@
+# Dependencias y sesiones
+node_modules/
+.wwebjs_auth/
+.wwebjs_cache/
+.whatsapp-skill/
+# Datos personales y claves: NUNCA al repositorio
+personas-frecuentes.json
+claves.env
+.env
+.env.*
+*.lock
+# Imágenes de QR y salidas de lectura
+whatsapp-skill-qr.png
+salida.txt
+salida.json
+diagnostico.txt
+codigo.txt
+# Sistema
+.DS_Store
+Thumbs.db
+package-lock.json
