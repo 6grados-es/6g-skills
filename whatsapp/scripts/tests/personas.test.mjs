@@ -108,3 +108,12 @@ test('dos personas con el MISMO nombre exacto: no se elige ninguna, decide el us
   assert.equal(r.candidatos.length, 2);
   assert.equal(r.elegido, null);
 });
+
+import { lineaPersonaNueva } from '../lib/personas.mjs';
+test('PERSONA NUEVA: un @lid sin teléfono visible no propone teléfono; con teléfono lo propone; un grupo no lleva teléfono', () => {
+  assert.doesNotMatch(lineaPersonaNueva({ nombre: 'Ana', id: '555@lid', numero: null, esGrupo: false }), /--telefono/);
+  assert.match(lineaPersonaNueva({ nombre: 'Ana', id: '555@lid', numero: '34600000003', esGrupo: false }), /--telefono \+34600000003 --id 555@lid/);
+  const g = lineaPersonaNueva({ nombre: 'Cole', id: '12-34@g.us', numero: null, esGrupo: true });
+  assert.match(g, /--id 12-34@g\.us --grupo/);
+  assert.doesNotMatch(g, /--telefono/);
+});

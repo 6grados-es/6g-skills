@@ -43,7 +43,7 @@
  *   8 --bajar: ningún adjunto casa con el filtro · 9 --bajar: había adjuntos y no se bajó NINGUNO
  *   10 sesión NO vinculada (NO pide QR: se vincula una vez con vincular.mjs) · 11 falta el Chrome de puppeteer
  *   12 la sesión la usa otro proceso (no toca nada)
- *   14 --transcribir: no hay clave de transcripción (audios sin transcribir) · 15 --transcribir: falló alguna transcripción
+ *   14 --transcribir: hay audios y no hay clave de transcripción (audios sin transcribir) · 15 --transcribir: falló alguna transcripción
  *
  * ─── POR QUÉ NO USA LA API NORMAL DE whatsapp-web.js ──────────────────────────
  * La API de alto nivel (getChats…) está rota por cambios de WhatsApp Web: un solo chat que falle al serializar
@@ -60,16 +60,16 @@
  * 4. Un solo proceso a la vez (fichero de bloqueo): dos a la vez corrompen la sesión.
  * 5. Si la sesión no existe o WhatsApp pide un QR: salida 10 SIN mostrarlo. El QR solo se pide al vincular.
  */
-import { join, dirname, resolve } from 'path';
+import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { mkdirSync, writeFileSync, existsSync, readFileSync, statSync, readdirSync, rmSync } from 'fs';
+import { mkdirSync, writeFileSync, existsSync, readFileSync, statSync, readdirSync, rmSync, realpathSync } from 'fs';
 import { createHash } from 'crypto';
 import { homedir } from 'os';
 import { clasificarConsulta, coincidir, coincidirNumero, lineasListado } from './lib/coincidir-chat.mjs';
 import { parsearTipos, elegirAdjuntos, nombreSeguro, rutaLibre, tamanoLegible, MAX_POR_DEFECTO } from './lib/adjuntos.mjs';
 import { dirSesion, dirCacheWeb, dirTemporal, asegurar } from './lib/rutas.mjs';
 import { tomarBloqueo } from './lib/bloqueo.mjs';
-import { cargar as cargarPersonas, buscar as buscarPersona, idDePersona, marcarUso } from './lib/personas.mjs';
+import { cargar as cargarPersonas, buscar as buscarPersona, idDePersona, marcarUso, lineaPersonaNueva } from './lib/personas.mjs';
 import { configuracion, estadoConfiguracion, transcribirFichero, marca, ErrorTranscripcion } from './lib/transcribir.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -121,7 +121,9 @@ export async function leerMiembrosPagina(chatId, identificar) {
 }
 
 // Importar este fichero en los tests no abre WhatsApp ni consulta la sesión.
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// (con realpath: las skills suelen instalarse por enlace simbólico y sin él el script saldría con 0 sin hacer nada)
+const esPrincipal = (() => { try { return !!process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url)); } catch { return false; } })();
+if (esPrincipal) {
 
 // ── Argumentos ────────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -369,7 +371,9 @@ async function leer(chatId, limite, desdeT, hastaT, maxVueltas) {
 
     R.id = chat.id?._serialized || chat.id?.$1;
     R.nombre = chat.formattedTitle || chat.name || null;
-    R.numero = chat.id?.server === 'g.us' ? null : (chat.id?.user || null);
+    // Solo un id @c.us lleva el teléfono en `user`; en un @lid ese número es un id interno de WhatsApp, NO un teléfono.
+    R.numero = chat.id?.server === 'g.us' ? null
+      : (chat.id?.server === 'c.us' ? (chat.id?.user || null) : (window.__lectorIdentidadContacto(chat.id, Col.Contact?.get(chat.id)).telefono || null));
     R.esGrupo = !!chat.groupMetadata || chat.id?.server === 'g.us';
 
     const noNotif = (m) => !m.isNotification;
@@ -526,6 +530,7 @@ async function transcribirBajados(bajada) {
   const cfg = configuracion();
   const est = estadoConfiguracion(cfg);
   const res = { motor: cfg.motor, modelo: cfg.modelo, hechas: new Map(), fallidas: [], codigo: 0, aviso: null };
+  if (!bajada.bajados.length) return res;   // sin audios no hay nada que transcribir: tampoco hace falta clave
   if (!est.ok) { res.codigo = 14; res.aviso = est.motivo; return res; }
   const nube = cfg.motor === 'groq' || cfg.motor === 'openai' || (cfg.motor === 'compatible' && !/^https?:\/\/(localhost|127\.|\[::1\])/.test(cfg.url));
   if (nube) out(`=== AUDIO ENVIADO A ${cfg.motor.toUpperCase()} (servicio externo) para transcribirlo: son datos de terceros, el usuario tiene que saberlo ===`);
@@ -732,10 +737,7 @@ async function main() {
     }
     // ¿Es una persona nueva? Se PROPONE guardarla; solo la guarda el usuario diciendo que sí (node personas.mjs guardar …).
     const conocida = buscarPersona(R.id, PERSONAS).elegido || (R.numero && !R.esGrupo ? buscarPersona(`+${R.numero}`, PERSONAS).elegido : null);
-    if (!conocida) {
-      const tel = !R.esGrupo && R.numero && /^\d{7,15}$/.test(R.numero) ? ` --telefono +${R.numero}` : '';
-      out(`=== PERSONA NUEVA: «${R.nombre || '?'}» no está en tus personas frecuentes. Pregunta al usuario si la guardas; si dice que sí: node personas.mjs guardar --nombre "${R.nombre || ''}"${tel} --id ${R.id}${R.esGrupo ? ' --grupo' : ''} ===`);
-    }
+    if (!conocida) out(lineaPersonaNueva({ nombre: R.nombre, id: R.id, numero: R.numero, esGrupo: R.esGrupo }));
     out(`${lineaSincro(est)}\n`);
   }
   await cerrar(codigo);

@@ -98,3 +98,14 @@ test('vincular.mjs se niega (10) si ya hay una sesión guardada, sin arrancar Wh
   assert.match(r.stderr, /YA HAY una sesión/);
   assert.doesNotMatch(r.stderr, /QR #/);
 });
+
+test('el lector funciona también cuando se lanza a través de un enlace simbólico (así se instalan las skills)', async () => {
+  const { symlinkSync } = await import('node:fs');
+  const carpeta = mkdtempSync(join(tmpdir(), 'wa-link-'));
+  const enlace = join(carpeta, 'leer-enlace.mjs');
+  symlinkSync(lector, enlace);
+  const home = nuevoHome();
+  const r = spawnSync(process.execPath, [enlace, 'Marta'], { encoding: 'utf8', env: entorno(home), timeout: 30000 });
+  assert.equal(r.status, 10, `con el enlace salía sin hacer nada: ${r.stderr}`);
+  assert.match(r.stdout, /CODIGO: 10/);
+});

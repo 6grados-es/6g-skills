@@ -117,3 +117,13 @@ export function borrar(nombre, { ruta = ficheroPersonas() } = {}) {
   if (datos.personas.length !== antes) escribir(datos, ruta);
   return antes - datos.personas.length;
 }
+
+/**
+ * Línea «PERSONA NUEVA» del final de una lectura: propone guardar a quien aún no está. El teléfono solo se sugiere si
+ * es un teléfono de verdad (de un chat @c.us, o el que WhatsApp enseña de un @lid); un grupo no lleva teléfono.
+ * Nunca incluye texto de mensajes.
+ */
+export function lineaPersonaNueva({ nombre, id, numero, esGrupo }) {
+  const tel = !esGrupo && numero && /^\d{7,15}$/.test(String(numero)) ? ` --telefono +${numero}` : '';
+  return `=== PERSONA NUEVA: «${nombre || '?'}» no está en tus personas frecuentes. Pregunta al usuario si la guardas; si dice que sí: node personas.mjs guardar --nombre "${nombre || ''}"${tel} --id ${id}${esGrupo ? ' --grupo' : ''} ===`;
+}

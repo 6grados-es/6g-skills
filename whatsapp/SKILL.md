@@ -1,6 +1,6 @@
 ---
 name: whatsapp
-description: Lee y trabaja con tu WhatsApp desde Claude. Lee un chat o un grupo entero o desde una fecha, busca chats por nombre o por número de teléfono, descarga documentos, fotos y audios, transcribe notas de voz y deja un mensaje escrito y abierto en la app para que lo envíes tú. Úsala siempre que digas «léeme el chat de X», «qué se dijo en el grupo X», «busca en WhatsApp a X o el 600111222», «descárgame el documento o el audio que me mandó X», «transcríbeme esa nota de voz», «ábreme un WhatsApp para X» o «contesta a este cliente por WhatsApp». Nunca envía mensajes ni marca como leído, y solo lee lo que pides por nombre o número. No sirve para correo ni para mandar mensajes sin tu revisión.
+description: Lee y trabaja con tu WhatsApp desde Claude. Lee un chat o un grupo entero o desde una fecha, busca chats por nombre o por número de teléfono, descarga documentos, fotos y audios, transcribe notas de voz y deja un mensaje escrito y abierto en la app para que lo envíes tú. Úsala siempre que digas «léeme el chat de X», «qué se dijo en el grupo X», «busca en WhatsApp a X o el 600111222», «descárgame el documento o el audio que me mandó X», «transcríbeme esa nota de voz», «ábreme un WhatsApp para X», «mándale un WhatsApp a X» o «contesta a este cliente por WhatsApp». Nunca envía mensajes ni marca como leído, y si le pides mandarlo, lo deja en borrador para que lo envíes tú. Solo lee lo que pides por nombre o número. No sirve para correo.
 ---
 
 # WhatsApp: leer, descargar, transcribir y dejar borradores
