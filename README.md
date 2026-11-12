@@ -7,6 +7,8 @@ Skills de Claude de 6 Grados, instalables por el equipo y los clientes. Cada car
 | Carpeta | Qué hace |
 |---|---|
 | [`whatsapp/`](whatsapp/) | Lee chats y grupos de tu WhatsApp (enteros o desde una fecha), busca por nombre o por número, descarga documentos, fotos y audios, transcribe notas de voz, recuerda quién es quién (personas frecuentes) y deja mensajes escritos y abiertos en la app para que los envíes tú. Nunca envía ni marca como leído. Funciona en Windows y Mac. Antes se llamaba `whatsapp-borrador` (el modo borrador sigue dentro y no necesita enlazar nada). |
+| [`6g-reuniones/`](6g-reuniones/) | **Solo equipo.** El conector con Claude de las reuniones de 6 Grados (producto, redes, daily, weekly) en Notion: «añade un tema a la reunión», «añade un punto de informar», «apunta un siguiente paso», «marca como hecho X», «qué to-dos tengo», «crea la reunión de producto de hoy». Mismo formato que la web Reuniones (Revisar · Informar · Temas · Siguientes pasos, líneas `Nombre - …` de 15 palabras como máximo). Necesita el conector de Notion con acceso a 6 Grados y acceso al repo privado `6grados-es/6g-reuniones` (de ahí saca los tipos de reunión). |
+| [`6g-plaud/`](6g-plaud/) | **Solo equipo.** Saca la transcripción literal de una reunión de la grabadora Plaud (cuenta del equipo) y pone nombre a cada hablante. La usa `6g-reuniones`. |
 
 ## Cómo instalar una skill
 
