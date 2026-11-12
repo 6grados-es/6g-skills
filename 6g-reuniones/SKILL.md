@@ -55,7 +55,7 @@ Léelos antes de la primera escritura de la sesión.
 | «ya hemos visto X», «el punto 2 está visto» | VISTO | `visto producto "X"` (`--no` para quitarlo) |
 | «qué tareas tengo», «qué to-dos tiene Santi» | CONSULTAR | `todos santi` |
 | «qué quedó pendiente de la anterior», «cómo va la reunión» | CONSULTAR | `leer producto [--dia D]` |
-| «la transcripción de la reunión X», «qué se dijo en…» | TRANSCRIPCIÓN | skill `6g-plaud` |
+| «la transcripción de la reunión X», «qué se dijo en…» | TRANSCRIPCIÓN | `plaud producto [--md] [--procesar]`; si Plaud no está conectado, skill `6g-plaud` |
 
 `producto` puede ser cualquier tipo de `tipos.json` (la reunión de ese tipo de hoy, o la de `--dia`) o el id de la página. Las líneas se buscan por texto, exacto o una parte. Si casan varias, el comando lista los ids para elegir.
 
@@ -72,7 +72,7 @@ Léelos antes de la primera escritura de la sesión.
 
 ### CREAR (la reunión del día)
 
-1. Resuelve tipo, fecha y hora. La hora es opcional; con hora, la reunión dura los `minutos` del tipo.
+1. Resuelve tipo, fecha y hora. La hora es opcional; con hora, la reunión dura los `minutos` del tipo. Si no la dicen, usa la del evento de ese tipo en el calendario de 6 Grados (`hoy` la enseña: «… (calendario)»).
 2. **Confirma antes de crear** en una línea: título, fecha y hora, equipo y cuántas casillas se arrastran de la anterior.
 3. Con el comando: `crear <tipo> --dia D --hora HH:MM`. Hace todo:
    - no duplica si ya existe;
@@ -123,7 +123,7 @@ Se pueden hacer en cualquier reunión, como marcar.
 
 ### TRANSCRIPCIÓN
 
-1. Invoca la skill `6g-plaud` con la reunión (tipo, fecha, hora). Ella localiza la grabación, saca la literal y separa a los hablantes. Si no está instalada, dilo (README) y ofrece que peguen la transcripción.
+1. Con el comando y Plaud conectado: `plaud <tipo> [--dia D]` dice qué grabación es (la que empieza a la hora de la reunión, sacada del calendario), y su estado. `--md` saca la transcripción literal con hablantes y minuto. `--procesar`, si aún no está transcrita, se lo pide a Plaud: tarda minutos y gasta minutos de transcripción de la cuenta, así que pregunta antes. Si Plaud no está conectado, invoca la skill `6g-plaud` (por el navegador). Si no está instalada, dilo (README) y ofrece que peguen la transcripción.
 2. **No pegues la transcripción en Notion.** Propón, en lista numerada, lo que saldría como líneas: Informar, Temas, Siguientes pasos, con persona y ≤15 palabras cada una.
 3. Atribuye solo lo que tenga hablante de seguridad alta. Lo dudoso va aparte, sin persona.
 4. Con los números que elijan, aplica AÑADIR.
