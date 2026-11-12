@@ -11,7 +11,7 @@ Cada reunión en formato nuevo tiene, en este orden, cuatro encabezados H1 (text
 3. **Temas**: lista numerada. Lo que hay que hablar o decidir. Una propuesta empieza por «Propuesta: ».
 4. **Siguientes pasos**: casillas (`to_do`). Lo que alguien se compromete a hacer.
 
-Una página está «en formato nuevo» si tiene esos cuatro H1. Si no (Daily 6G y Weekly 6G hoy), solo se lee: no se escribe en ella salvo que lo pidan expresamente.
+Un H1 cuenta como su sección si es su nombre o empieza por él: «Siguientes pasos - YO ME COMPROMETO Y ES REALISTA» es Siguientes pasos. Los encabezados H2/H3 dentro de una sección se respetan en Notion; la web enseña solo las líneas. Una página está «en formato nuevo» si tiene esos cuatro H1. Si no (Daily 6G y Weekly 6G hoy), solo se lee: no se escribe en ella salvo que lo pidan expresamente.
 
 ## Cada línea
 

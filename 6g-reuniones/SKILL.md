@@ -55,7 +55,7 @@ Léelos antes de la primera escritura de la sesión.
 | «ya hemos visto X», «el punto 2 está visto» | VISTO | `visto producto "X"` (`--no` para quitarlo) |
 | «qué tareas tengo», «qué to-dos tiene Santi» | CONSULTAR | `todos santi` |
 | «qué quedó pendiente de la anterior», «cómo va la reunión» | CONSULTAR | `leer producto [--dia D]` |
-| «la transcripción de la reunión X», «qué se dijo en…» | TRANSCRIPCIÓN | `plaud producto [--md] [--procesar]`; si Plaud no está conectado, skill `6g-plaud` |
+| «la transcripción de la reunión X», «qué se dijo en…» | TRANSCRIPCIÓN | `plaud producto [--md]`; si Plaud no está conectado, skill `6g-plaud` |
 
 `producto` puede ser cualquier tipo de `tipos.json` (la reunión de ese tipo de hoy, o la de `--dia`) o el id de la página. Las líneas se buscan por texto, exacto o una parte. Si casan varias, el comando lista los ids para elegir.
 
@@ -123,7 +123,7 @@ Se pueden hacer en cualquier reunión, como marcar.
 
 ### TRANSCRIPCIÓN
 
-1. Con el comando y Plaud conectado: `plaud <tipo> [--dia D]` dice qué grabación es (la que empieza a la hora de la reunión, sacada del calendario), y su estado. `--md` saca la transcripción literal con hablantes y minuto. `--procesar`, si aún no está transcrita, se lo pide a Plaud: tarda minutos y gasta minutos de transcripción de la cuenta, así que pregunta antes. Si Plaud no está conectado, invoca la skill `6g-plaud` (por el navegador). Si no está instalada, dilo (README) y ofrece que peguen la transcripción.
+1. Con el comando y Plaud conectado: `plaud <tipo> [--dia D]` dice qué grabación es (la que empieza a la hora de la reunión, sacada del calendario), y su estado. `--md` saca la transcripción literal con hablantes y minuto. Si aún no está transcrita, la API oficial de Plaud no puede pedirlo: da el enlace (`--procesar` lo imprime) para que la persona pulse «Generar» en Plaud. Si Plaud no está conectado en esa máquina (`~/.plaud/tokens.json`), `node bin/plaud-conectar.mjs` lo conecta entrando con Google (hola@6grados.es → «Autorizar»), o invoca la skill `6g-plaud` (por el navegador). Si no está instalada, dilo (README) y ofrece que peguen la transcripción.
 2. **No pegues la transcripción en Notion.** Propón, en lista numerada, lo que saldría como líneas: Informar, Temas, Siguientes pasos, con persona y ≤15 palabras cada una.
 3. Atribuye solo lo que tenga hablante de seguridad alta. Lo dudoso va aparte, sin persona.
 4. Con los números que elijan, aplica AÑADIR.
