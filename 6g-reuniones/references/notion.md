@@ -1,5 +1,7 @@
 # Cómo operar con Notion (reuniones)
 
+> **Si tienes el repo y `NOTION_TOKEN`, usa el comando `bin/reuniones.mjs`** (SKILL.md, paso 0): hace todo esto solo y con el mismo código que la web. Esta guía es para cuando solo hay el conector de Notion, o para entender qué hace el comando.
+
 Los ids (data source, personas) y los nombres de propiedades están en `tipos.json`; no los copies aquí. Propiedades de la base «Reuniones de Equipo»: `Nombre` (título), `Fecha`, `Equipo` (personas), `Tipo de Reunion`, `Archivado`.
 
 > Antes de la primera escritura de la sesión, haz un `notion-fetch` del data source (`collection://<data_source de tipos.json>`) y confirma los nombres exactos de las propiedades. Si Notion las ha renombrado, usa las del schema y avisa.
@@ -27,7 +29,9 @@ Los ids (data source, personas) y los nombres de propiedades están en `tipos.js
 # Siguientes pasos
 ```
 
-Primera reunión del tipo: bajo «Revisar», `- Sin tareas anteriores: es la primera reunión de Producto.`
+Bajo «Revisar» van las casillas sin marcar de la anterior: las de sus «Siguientes pasos» y las de su «Revisar» que nadie resolvió, sin repetir textos y con su Detalle. Primera reunión del tipo: `- Sin tareas anteriores: es la primera reunión de producto.`
+
+Con hora: `date:Fecha:start` = `AAAA-MM-DDTHH:MM:00`, `date:Fecha:end` = la hora más los `minutos` del tipo y zona `Europe/Madrid`. **Después**, espera 3 s, vuelve a leer la página y, si la automatización de la base ha puesto `Fecha` = hoy, vuelve a poner la buena (repítelo hasta que se quede).
 
 ## Insertar una línea al final de su sección
 
@@ -47,6 +51,8 @@ Con `notion-update-page` en su modo de **insertar contenido después de un texto
 
   Hijos con tabulador (no espacios). En listas numeradas el número da igual: Notion renumera por posición. Siguientes pasos: `- [ ] Santi - Revisar los niveles en la plataforma`.
 - Sin Detalle, solo la línea.
+- Si la línea pasa de 15 palabras (nombre incluido, el guion no cuenta), córtala como dice `formato.md` y pon lo que sobra, empezando por «…», como primera viñeta del Detalle.
+- Antes de insertar, comprueba que no hay ya una línea igual en esa sección. Si la sección solo tiene el hueco vacío de la plantilla, escribe en él en vez de añadir otra.
 - Después, `notion-fetch` y comprueba que la línea quedó dentro de su sección y que el toggle quedó anidado. Si no, corrige los tabuladores.
 
 ## Marcar una casilla
@@ -55,7 +61,9 @@ Sustituir el texto de la casilla por el mismo con la marca: `- [ ] Santi - Loom�
 
 ## Quitar una línea
 
-Solo en la reunión de trabajo. Sustituye su texto por vacío (o archiva el bloque por REST, abajo). Notion guarda el historial de la página, así que es recuperable. En una reunión pasada, no.
+Solo en la reunión de trabajo (la de hoy o una futura). Archiva el bloque por REST (abajo) o, con el conector, sustituye su texto por vacío. Notion guarda el historial de la página, así que es recuperable. En una reunión pasada, no.
+
+Para deshacer, no saques el bloque de la papelera: Notion lo devuelve al **final** de la página. Vuelve a crear la misma línea (con su Detalle) detrás del bloque que tenía delante.
 
 ## No hagas nunca
 
@@ -70,7 +78,7 @@ Cabeceras: `Authorization: Bearer $NOTION_TOKEN`, `Notion-Version: 2025-09-03`, 
 
 ```json
 {"filter":{"and":[
-  {"property":"Fecha","date":{"on_or_after":"2026-10-13"}},
+  {"property":"Fecha","date":{"on_or_after":"2026-10-29"}},
   {"property":"Archivado","checkbox":{"equals":false}}
 ]},"sorts":[{"property":"Fecha","direction":"descending"}]}
 ```
