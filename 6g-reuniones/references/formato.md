@@ -44,6 +44,8 @@ Una página está «en formato nuevo» si tiene esos cuatro H1. Si no (Daily 6G 
 |---|---|---|
 | Añadir una línea (al final de su sección) | Sí | Sí |
 | ✓ Marcar o desmarcar una casilla | Sí | Sí |
+| Cambiar la persona de una línea | Sí | Sí |
+| Marcar un punto de Informar o Temas como visto | Sí | Sí |
 | ↓ Pasar de Revisar a Siguientes pasos | Sí | No |
 | Editar el texto de una línea | Sí | No |
 | Quitar una línea | Sí | No |
@@ -52,10 +54,12 @@ Una página está «en formato nuevo» si tiene esos cuatro H1. Si no (Daily 6G 
 - **Sigue pendiente (↓)**: la casilla pasa al final de «Siguientes pasos» de esta reunión (igual, con su Detalle) y se quita de «Revisar». En la reunión anterior no se toca nada.
 - **Quitar** = archivar el bloque en Notion (va a la papelera; recuperable). «Deshacer» la vuelve a crear igual en su sitio: Notion, si se saca de la papelera, la deja al final de la página.
 - **Editar** corrige el texto (máximo 15 palabras); el Detalle no se toca.
+- **Cambiar de persona**: se sustituye el nombre (o alias) que hay en la línea por el de la otra persona; si no hay ninguno, se pone «Nombre - » delante. En «Revisar», también en la gemela de la reunión anterior. La web lo hace con un desplegable en cada línea y en la lista de tareas.
+- **Visto** (Informar y Temas): el punto ya se ha tratado. En Notion, el bloque se pone en **gris**; el texto no cambia.
 
-## To-dos de una persona
+## Tareas (to-dos) de una persona
 
-Las casillas sin marcar con su nombre o un alias (`alias` de cada persona en `tipos.json`; sin distinguir mayúsculas ni tildes, en cualquier posición: «Santi - …», «Tarea - Santi») en las reuniones de los últimos `formato.dias_todos` días (14), de formato nuevo y antiguo. Una casilla vale por su texto y **manda la copia más reciente**: si en una reunión posterior está marcada, está hecha y no sale; si sale sin marcar en varias, una sola vez, con su reunión más reciente.
+Las casillas sin marcar con su nombre o un alias (`alias` de cada persona en `tipos.json`; sin distinguir mayúsculas ni tildes, en cualquier posición: «Santi - …», «Tarea - Santi») en las reuniones de los últimos `formato.dias_todos` días (14) y en las próximas, de formato nuevo y antiguo. Se enseñan agrupadas por la reunión de la que vienen. Una casilla vale por su texto y **manda la copia más reciente**: si en una reunión posterior está marcada, está hecha y no sale; si sale sin marcar en varias, una sola vez, con su reunión más reciente.
 
 ## Tipos ocultos
 

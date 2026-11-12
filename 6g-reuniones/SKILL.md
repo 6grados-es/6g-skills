@@ -51,7 +51,9 @@ Léelos antes de la primera escritura de la sesión.
 | «pasa X a siguientes pasos», «sigue pendiente X», «↓» | PENDIENTE | `pasar producto "X"` |
 | «quita X», «borra la línea X» | QUITAR | `quitar producto "X"` |
 | «corrige X por Y» | EDITAR | `editar producto "X" "Y"` |
-| «qué to-dos tengo», «qué tiene Santi» | CONSULTAR | `todos santi` |
+| «eso es de Santi», «pásale X a Pablo» | ASIGNAR | `asignar producto "X" santi` |
+| «ya hemos visto X», «el punto 2 está visto» | VISTO | `visto producto "X"` (`--no` para quitarlo) |
+| «qué tareas tengo», «qué to-dos tiene Santi» | CONSULTAR | `todos santi` |
 | «qué quedó pendiente de la anterior», «cómo va la reunión» | CONSULTAR | `leer producto [--dia D]` |
 | «la transcripción de la reunión X», «qué se dijo en…» | TRANSCRIPCIÓN | skill `6g-plaud` |
 
@@ -104,10 +106,16 @@ Solo en la **reunión de trabajo** (la de hoy o una futura); en una pasada, dilo
 - **Quitar**: archiva la línea (papelera de Notion, recuperable). Confirma antes si no es una línea que acabes de escribir tú.
 - **Editar**: corrige el texto (máximo 15 palabras); el Detalle se queda.
 
+### ASIGNAR · VISTO
+
+Se pueden hacer en cualquier reunión, como marcar.
+- **Asignar**: cambia la persona de la línea. Sustituye su nombre («Pedro - …» o, en las Daily antiguas, «… - Pedro») por el de la otra persona. Si está en «Revisar», también cambia la gemela de la reunión anterior, para que sigan unidas. Eco: `✅ Ahora: Santi - … · <enlace>`.
+- **Visto**: marca un punto de Informar o Temas como ya tratado (en Notion, el bloque se pone en gris). Al recorrer la reunión, ve marcando lo hablado.
+
 ### CONSULTAR
 
-- **«Qué to-dos tengo / tiene X»**: `todos <persona>`.
-  - Son las casillas sin marcar con su nombre o alias en las reuniones de los últimos 14 días, de formato nuevo y también Daily/Weekly.
+- **«Qué tareas (to-dos) tengo / tiene X»**: `todos <persona>`.
+  - Son las casillas sin marcar con su nombre o alias en las reuniones de los últimos 14 días y en las próximas, de formato nuevo y también Daily/Weekly. Agrúpalas por reunión.
   - Manda la copia más reciente (regla en `formato.md`).
   - Sin el comando: consulta REST por rango de `Fecha` o, con el conector, `notion-fetch` de las reuniones de esas dos semanas. Di cuántas has revisado.
 - **«Qué quedó pendiente de la anterior»**: `leer <tipo>` y mira el «Revisar» de la de hoy, de todas las personas. Si hoy aún no hay reunión, los «Siguientes pasos» sin marcar de la anterior.
