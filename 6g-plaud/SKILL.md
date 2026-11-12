@@ -52,8 +52,8 @@ Plaud diariza («Speaker 1, 2…») pero casi nunca pone nombre. Nunca entregues
 
 1. **Saca la lista de quién estaba**: cita del Calendar (asistentes), título de la grabación, notas del cliente o del CRM, y la propia conversación (presentaciones, «tu madre», «mi clínica»). Si la llamó `6g-reuniones`, los asistentes son el `Equipo` de la reunión.
 2. **Asigna cada Speaker por lo que dice, no por el orden.** Pistas, de más a menos fiable:
-   - Se nombra o le nombran («Javi, tú…», «yo soy la que lleva las citas»).
-   - Habla de SU negocio en primera persona («mi agenda», «mis inquilinos», «mis leads») → es el cliente dueño de eso.
+   - Se nombra o le nombran («Marta, tú…», «yo soy la que lleva las citas»).
+   - Habla de SU negocio en primera persona («mi agenda», «mis leads») → es el cliente dueño de eso.
    - Rol en la reunión: quien explica el método, las llaves o el precio es alguien de 6 Grados; quien cuenta su día a día es el cliente.
    - Reuniones internas: Santi dirige y pide avances («tienes que traer todos los días avance»); Pablo y Alejo hablan de contenido, CRM o contabilidad. Si dudas entre dos del equipo, dilo.
 3. **Comprueba los cruces**: Plaud a veces parte a una persona en dos Speakers o junta a dos en uno. Si un mismo Speaker dice cosas incompatibles («mi clínica» y luego «tu clínica»), sepáralo por turnos y márcalo.

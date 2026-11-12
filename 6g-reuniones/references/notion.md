@@ -38,7 +38,7 @@ Con `notion-update-page` en su modo de **insertar contenido después de un texto
 - Contenido a insertar:
 
 ```
-1. Pedro - Alberto (Intrexia): sesión 3 dada, clases abiertas hasta la 7.
+1. Pedro - Cliente X: sesión 3 dada, clases abiertas hasta la 7.
 	<details>
 	<summary>Detalle</summary>
 		- Próxima sesión: martes 17-nov, 13:00.

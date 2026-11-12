@@ -79,7 +79,7 @@ Los tipos de formato antiguo (Daily 6G, Weekly 6G) no se crean con esta skill.
 3. Formato de bloque: numerada en Informar y Temas; casilla `- [ ]` en Siguientes pasos.
 4. Insértala **al final de su sección** (después de la última línea y de sus Detalle, antes del siguiente H1) con `notion-update-page`. Nunca reescribas la página entera.
 5. Si ya existe una línea idéntica, avisa y no la dupliques.
-6. Eco de una línea con lo escrito y el enlace: `✅ Informar · Pedro - Alberto (Intrexia): sesión 3 dada. · <enlace>`.
+6. Eco de una línea con lo escrito y el enlace: `✅ Informar · Pedro - Cliente X: sesión 3 dada. · <enlace>`.
 
 ### HECHO
 

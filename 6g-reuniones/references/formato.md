@@ -25,7 +25,7 @@ Una página está «en formato nuevo» si tiene esos cuatro H1. Si no (Daily 6G 
 # Revisar
 - [ ] Santi - Loom de contactos personales en el CRM
 # Informar
-1. Pedro - Alberto (Intrexia): sesión 3 dada, clases abiertas hasta la 7.
+1. Pedro - Cliente X: sesión 3 dada, clases abiertas hasta la 7.
    ▸ Detalle
       - Próxima sesión: martes 17-nov, 13:00.
 # Temas
