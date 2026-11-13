@@ -11,7 +11,7 @@ Cada reunión en formato nuevo tiene, en este orden, cuatro encabezados H1 (text
 3. **Temas**: lista numerada. Lo que hay que hablar o decidir. Una propuesta empieza por «Propuesta: ».
 4. **Siguientes pasos**: casillas (`to_do`). Lo que alguien se compromete a hacer.
 
-Un H1 cuenta como su sección si es su nombre o empieza por él: «Siguientes pasos - YO ME COMPROMETO Y ES REALISTA» es Siguientes pasos. Los encabezados H2/H3 dentro de una sección se respetan en Notion; la web enseña solo las líneas. Una página está «en formato nuevo» si tiene esos cuatro H1. Si no (las Daily 6G y Weekly 6G de antes del 13-nov-2026), solo se lee: no se escribe en ella salvo que lo pidan expresamente o se pase al formato con la skill (FORMATEAR: propuesta, ok y entonces se aplica, guardando una copia de lo de antes). Desde el 13-nov todos los tipos nacen en formato nuevo.
+Un H1 cuenta como su sección si es su nombre o empieza por él: «Siguientes pasos - YO ME COMPROMETO Y ES REALISTA» es Siguientes pasos. Los encabezados H2/H3 dentro de una sección son apartados (p. ej. en Temas de la Daily: «Puntos fijos», «Parking» y «Temas nuevos»): la web los enseña como subtítulos y numera desde 1 en cada uno, como Notion. Lo que se añade va al final de la sección, así que el último apartado debe ser el de lo nuevo (si no, caería en el Parking). Una página está «en formato nuevo» si tiene esos cuatro H1. Si no (las Daily 6G y Weekly 6G de antes del 13-nov-2026), solo se lee: no se escribe en ella salvo que lo pidan expresamente o se pase al formato con la skill (FORMATEAR: propuesta, ok y entonces se aplica, guardando una copia de lo de antes). Desde el 13-nov todos los tipos nacen en formato nuevo.
 
 ## Reuniones recurrentes
 
