@@ -15,7 +15,9 @@ Un H1 cuenta como su sección si es su nombre o empieza por él: «Siguientes pa
 
 ## Reuniones recurrentes
 
-Producto, redes, Daily y Weekly se crean solas (`recurrente` en `tipos.json`). Toca el día que hay evento de su tipo en el calendario de 6 Grados, a su hora. Producto, sin serie propia, va los días de Daily: a su hora si tiene evento o, si no, al acabar la Daily. Sin calendario, se usan los `dias` (1 = lunes) y la `hora` de `tipos.json`. Nunca se duplica: si alguien ya la creó, no se toca. La Daily solo se crea a falta de 3 h (`antes_min`), porque la suele crear antes el Claude de Santi. Las crea una rutina del Mac de Pedro cada 30 min, de lunes a viernes, y también se pueden crear desde la skill o desde la web (apartado «Recurrentes»).
+Producto, redes, Daily y Weekly se crean solas (`recurrente` en `tipos.json`). Toca el día que hay evento de su tipo en el calendario de 6 Grados, a su hora. Producto, sin serie propia, va los días de Daily: a su hora si tiene evento o, si no, al acabar la Daily. Sin calendario, se usan los `dias` (1 = lunes) y la `hora` de `tipos.json`. Nunca se duplica: si alguien ya la creó, no se toca. Las crea una rutina del Mac de Pedro cada 30 min, de lunes a viernes, como red de seguridad: solo si a 1 h de empezar nadie la ha creado (`rutina.antes_min`), para no adelantarse a quien las crea siempre (el Claude de Santi, Pablo). Desde la skill o desde la web (apartado «Recurrentes») se pueden crear antes.
+
+Al formatear una reunión, las líneas de **Revisar** se copian con su texto exacto (sin reformular, sin mover el nombre, sin cortar): se casan por texto con la reunión anterior y con las tareas de cada persona.
 
 ## Cada línea
 

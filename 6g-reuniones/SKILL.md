@@ -92,7 +92,7 @@ Desde el 13-nov-2026 todos los tipos nacen en formato nuevo, también la Daily 6
 
 Producto, redes, Daily y Weekly se crean solas (`recurrente` de cada tipo en `tipos.json`):
 - **Cuándo toca:** el día que hay evento de su tipo en el calendario de 6 Grados, a su hora. Producto no tiene serie propia: va los días de Daily, a su hora si tiene evento o al acabar la Daily. Sin calendario, los `dias` y la `hora` de `tipos.json`.
-- **Quién las crea:** una rutina del Mac de Pedro (`sh bin/rutina-mac.sh instalar|estado|quitar`) que cada 30 min, de lunes a viernes, lanza `crear-recurrentes --rutina`. La Daily solo la crea a falta de 3 h (`antes_min`), porque la suele crear antes el Claude de Santi.
+- **Quién las crea:** una rutina del Mac de Pedro (`sh bin/rutina-mac.sh instalar|estado|quitar`) que cada 30 min, de lunes a viernes, lanza `crear-recurrentes --rutina`. Es la red de seguridad: crea cada reunión solo si a 1 h de empezar nadie la ha creado (`rutina.antes_min`), para no adelantarse a quien las crea siempre (el Claude de Santi crea la Daily y la Weekly; Pablo, la de redes).
 - **Nunca duplica:** si ya existe (por fecha o por el día en el título), no la toca.
 - **Desde la skill:** `recurrentes` enseña las series y lo que toca hoy; `crear-recurrentes --simular` dice qué crearía; sin `--simular`, las crea. Confirma antes de crear si no lo han pedido así.
 - **En la web:** el apartado «Recurrentes» (enlace en Hoy y en Ajustes), con el botón «Crear las de hoy que falten».
@@ -102,7 +102,7 @@ Producto, redes, Daily y Weekly se crean solas (`recurrente` de cada tipo en `ti
 Para una reunión sin las cuatro secciones (una Daily o Weekly antigua, o una página escrita a mano):
 1. `formatear <reunión> [--dia D]` enseña la página en Markdown y lo que quedó sin marcar en la anterior.
 2. **Haz tú la propuesta** con las reglas de `formato.md`:
-   - **Revisar:** lo pendiente (casillas de «To-do's ayer», lo sin marcar de la anterior), con su estado.
+   - **Revisar:** lo pendiente (casillas de «To-do's ayer», lo sin marcar de la anterior), con su estado y con su **texto exacto**: sin reformular, sin mover el nombre y sin cortar. Se casa por texto con la reunión anterior (marcar la gemela) y con las tareas de cada persona; si cambia, se separan. El comando no las corta.
    - **Informar:** lo que alguien cuenta (actualizaciones).
    - **Temas:** lo que hay que hablar o decidir, también lo del Parking.
    - **Siguientes pasos:** a lo que alguien se compromete.
