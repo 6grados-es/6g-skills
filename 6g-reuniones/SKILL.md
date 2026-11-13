@@ -4,15 +4,17 @@ description: >-
   El conector con Claude de las reuniones de equipo de 6 Grados (producto, redes, daily, weekly), que viven
   en la base «Reuniones de Equipo» de Notion. Añade informar, temas y siguientes pasos a una reunión, marca
   casillas como hechas, pasa pendientes, quita o corrige líneas, crea la reunión del día con lo pendiente de la
-  anterior, lista los to-dos de una persona y trae la transcripción de Plaud. Usa el mismo código y las mismas
-  reglas que la web Reuniones (los botones): la fuente de verdad es Notion. Invócala SIEMPRE que digan «añade un
-  tema a la reunión» (de producto o de redes), «añade un punto de informar», «apunta un siguiente paso», «marca
-  como hecho X», «quita la línea X», «qué to-dos tengo», «qué to-dos tiene Santi», «qué quedó pendiente de la
-  anterior», «crea la reunión de producto (o de redes) de hoy», «la transcripción de la reunión X» o
-  «/6g-reuniones». Daily 6G y Weekly 6G (formato antiguo) solo se leen.
+  anterior, crea las reuniones recurrentes que falten, pasa al formato una reunión desordenada (propuesta y, con
+  ok, la aplica), lista los to-dos de una persona y trae la transcripción de Plaud. Usa el mismo código y las
+  mismas reglas que la web Reuniones (los botones): la fuente de verdad es Notion. Invócala SIEMPRE que digan
+  «añade un tema a la reunión» (de producto o de redes), «añade un punto de informar», «apunta un siguiente
+  paso», «marca como hecho X», «quita la línea X», «qué to-dos tengo», «qué to-dos tiene Santi», «qué quedó
+  pendiente de la anterior», «crea la reunión de producto (o de redes, daily, weekly) de hoy», «crea las
+  reuniones de hoy», «qué reuniones recurrentes hay», «formatea la daily de hoy», «pon esta reunión en el
+  formato», «la transcripción de la reunión X» o «/6g-reuniones».
 ---
 
-Se lanza: a demanda («añade un tema a producto», «apunta un siguiente paso», «marca como hecho X», «qué to-dos tengo», «crea la reunión de redes de hoy», «la transcripción de la reunión X»).
+Se lanza: a demanda («añade un tema a producto», «apunta un siguiente paso», «marca como hecho X», «qué to-dos tengo», «crea la reunión de redes de hoy», «formatea la daily de hoy», «la transcripción de la reunión X»); y su comando `crear-recurrentes`, solo, cada 30 min desde la rutina del Mac de Pedro.
 
 # Skill · 6g-reuniones
 
@@ -43,7 +45,9 @@ Léelos antes de la primera escritura de la sesión.
 
 | Dicen | Modo | Comando (desde la raíz del repo) |
 |---|---|---|
-| «crea la reunión de producto / de redes (de hoy)» | CREAR | `crear producto [--dia D] [--hora HH:MM]` |
+| «crea la reunión de producto / de redes / la daily / la weekly (de hoy)» | CREAR | `crear producto [--dia D] [--hora HH:MM]` |
+| «crea las reuniones de hoy», «qué reuniones recurrentes hay», «se ha creado la de…» | RECURRENTES | `recurrentes [--dia D]` · `crear-recurrentes [--dia D] [--simular]` |
+| «formatea la daily de hoy», «ponla en el formato», «ordena esta reunión» | FORMATEAR | `formatear daily [--dia D]` y luego `formatear <id> --aplicar propuesta.json` |
 | «añade a informar…», «para informar: …» | AÑADIR → Informar | `anadir producto informar "…" --persona pedro [--detalle "…"]` |
 | «añade un tema…», «propuesta: …», «hay que hablar de…» | AÑADIR → Temas | `anadir producto temas "…" --persona pedro` |
 | «apunta un siguiente paso», «X se encarga de…», «me comprometo a…» | AÑADIR → Siguientes pasos | `anadir producto pasos "…" --persona santi` |
@@ -76,13 +80,42 @@ Léelos antes de la primera escritura de la sesión.
 2. **Confirma antes de crear** en una línea: título, fecha y hora, equipo y cuántas casillas se arrastran de la anterior.
 3. Con el comando: `crear <tipo> --dia D --hora HH:MM`. Hace todo:
    - no duplica si ya existe;
-   - copia a «Revisar» lo sin marcar de la anterior (sus Siguientes pasos y lo de su Revisar que nadie resolvió), sin repetir;
+   - copia a «Revisar» lo sin marcar de la anterior (sus Siguientes pasos y lo de su Revisar que nadie resolvió; si la anterior es de formato antiguo, sus casillas sin marcar que llevan persona), sin repetir;
    - vuelve a poner la fecha cuando la automatización de la base la pisa.
 
    Sin el comando: `references/notion.md` → «Crear una reunión», con esas mismas reglas.
 4. Eco: `✅ Creada · <título> · <n> pendientes en Revisar · <enlace>`.
 
-Los tipos de formato antiguo (Daily 6G, Weekly 6G) no se crean con esta skill.
+Desde el 13-nov-2026 todos los tipos nacen en formato nuevo, también la Daily 6G y la Weekly 6G (decisión de Pedro). Las anteriores siguen como estaban (ver FORMATEAR).
+
+### RECURRENTES (las reuniones que se crean solas)
+
+Producto, redes, Daily y Weekly se crean solas (`recurrente` de cada tipo en `tipos.json`):
+- **Cuándo toca:** el día que hay evento de su tipo en el calendario de 6 Grados, a su hora. Producto no tiene serie propia: va los días de Daily, a su hora si tiene evento o al acabar la Daily. Sin calendario, los `dias` y la `hora` de `tipos.json`.
+- **Quién las crea:** una rutina del Mac de Pedro (`sh bin/rutina-mac.sh instalar|estado|quitar`) que cada 30 min, de lunes a viernes, lanza `crear-recurrentes --rutina`. La Daily solo la crea a falta de 3 h (`antes_min`), porque la suele crear antes el Claude de Santi.
+- **Nunca duplica:** si ya existe (por fecha o por el día en el título), no la toca.
+- **Desde la skill:** `recurrentes` enseña las series y lo que toca hoy; `crear-recurrentes --simular` dice qué crearía; sin `--simular`, las crea. Confirma antes de crear si no lo han pedido así.
+- **En la web:** el apartado «Recurrentes» (enlace en Hoy y en Ajustes), con el botón «Crear las de hoy que falten».
+
+### FORMATEAR (pasar al formato una reunión desordenada)
+
+Para una reunión sin las cuatro secciones (una Daily o Weekly antigua, o una página escrita a mano):
+1. `formatear <reunión> [--dia D]` enseña la página en Markdown y lo que quedó sin marcar en la anterior.
+2. **Haz tú la propuesta** con las reglas de `formato.md`:
+   - **Revisar:** lo pendiente (casillas de «To-do's ayer», lo sin marcar de la anterior), con su estado.
+   - **Informar:** lo que alguien cuenta (actualizaciones).
+   - **Temas:** lo que hay que hablar o decidir, también lo del Parking.
+   - **Siguientes pasos:** a lo que alguien se compromete.
+   - Cada línea es `Persona - enunciado` de ≤15 palabras, y lo largo va al Detalle.
+   - No inventes ni pierdas nada: lo que no sepas de quién es, pregúntalo.
+3. **Enséñala numerada por secciones y espera el ok.** Nada se toca sin él.
+4. Con el ok, escribe la propuesta en un JSON y aplica: `formatear <id> --aplicar propuesta.json`. El JSON lleva `{"revisar":[…],"informar":[…],"temas":[…],"pasos":[…]}`, y cada línea puede ser un texto o `{"texto","detalle":[…],"hecho":bool,"visto":bool}`.
+   - El comando añade las cuatro secciones y un desplegable «Antes de formatear» con la página de antes en Markdown.
+   - Manda los bloques de antes a la papelera de Notion, donde se pueden recuperar. Las subpáginas no se tocan.
+   - En una página que ya tiene el formato, solo con `--forzar`.
+5. Eco: `✅ <título> ya está en el formato: n en Revisar, n en Informar… · <enlace>`.
+
+La web, en una reunión sin formato, enseña este camino y copia la petición para Claude.
 
 ### AÑADIR (informar · tema · siguiente paso)
 
@@ -128,9 +161,9 @@ Se pueden hacer en cualquier reunión, como marcar.
 3. Atribuye solo lo que tenga hablante de seguridad alta. Lo dudoso va aparte, sin persona.
 4. Con los números que elijan, aplica AÑADIR.
 
-### Formato antiguo (Daily 6G, Weekly 6G)
+### Formato antiguo (Daily 6G y Weekly 6G de antes del 13-nov)
 
-Solo lectura: nada de moverlas ni reescribirlas. Escribir en una exige petición expresa («escríbelo en la Daily de hoy»): entonces añade solo esa línea al final, sin tocar el resto, y dilo. Si no, ofrece pasarlo a Producto o Redes.
+Solo lectura, salvo FORMATEAR con ok: nada de moverlas ni reescribirlas. Escribir en una exige petición expresa («escríbelo en la Daily de hoy»): entonces añade solo esa línea al final, sin tocar el resto, y dilo. Si no, ofrece pasarlo a Producto o Redes.
 
 ## Reglas
 

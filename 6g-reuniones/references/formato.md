@@ -11,7 +11,11 @@ Cada reunión en formato nuevo tiene, en este orden, cuatro encabezados H1 (text
 3. **Temas**: lista numerada. Lo que hay que hablar o decidir. Una propuesta empieza por «Propuesta: ».
 4. **Siguientes pasos**: casillas (`to_do`). Lo que alguien se compromete a hacer.
 
-Un H1 cuenta como su sección si es su nombre o empieza por él: «Siguientes pasos - YO ME COMPROMETO Y ES REALISTA» es Siguientes pasos. Los encabezados H2/H3 dentro de una sección se respetan en Notion; la web enseña solo las líneas. Una página está «en formato nuevo» si tiene esos cuatro H1. Si no (Daily 6G y Weekly 6G hoy), solo se lee: no se escribe en ella salvo que lo pidan expresamente.
+Un H1 cuenta como su sección si es su nombre o empieza por él: «Siguientes pasos - YO ME COMPROMETO Y ES REALISTA» es Siguientes pasos. Los encabezados H2/H3 dentro de una sección se respetan en Notion; la web enseña solo las líneas. Una página está «en formato nuevo» si tiene esos cuatro H1. Si no (las Daily 6G y Weekly 6G de antes del 13-nov-2026), solo se lee: no se escribe en ella salvo que lo pidan expresamente o se pase al formato con la skill (FORMATEAR: propuesta, ok y entonces se aplica, guardando una copia de lo de antes). Desde el 13-nov todos los tipos nacen en formato nuevo.
+
+## Reuniones recurrentes
+
+Producto, redes, Daily y Weekly se crean solas (`recurrente` en `tipos.json`). Toca el día que hay evento de su tipo en el calendario de 6 Grados, a su hora. Producto, sin serie propia, va los días de Daily: a su hora si tiene evento o, si no, al acabar la Daily. Sin calendario, se usan los `dias` (1 = lunes) y la `hora` de `tipos.json`. Nunca se duplica: si alguien ya la creó, no se toca. La Daily solo se crea a falta de 3 h (`antes_min`), porque la suele crear antes el Claude de Santi. Las crea una rutina del Mac de Pedro cada 30 min, de lunes a viernes, y también se pueden crear desde la skill o desde la web (apartado «Recurrentes»).
 
 ## Cada línea
 
