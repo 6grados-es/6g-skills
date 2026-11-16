@@ -24,7 +24,7 @@ El conector con Claude de las reuniones de 6 Grados. Todo se lee y se escribe en
 
 **Notion ya no se usa** (desde el 15-nov-2026). Todas las reuniones que había allí se pasaron a la base (el 16-nov-2026, también las antiguas); las páginas de Notion quedan como copia vieja, que ya no se actualiza. **Nunca escribas una reunión en Notion**, ni con el conector de Notion ni por REST: nadie lo vería en la web.
 
-- Formato y reglas (4 H1, «Persona - enunciado», 15 palabras, Detalle, qué se puede hacer en cada reunión, to-dos): `references/formato.md`.
+- Formato y reglas (4 H1, «Persona - enunciado», sin límite de palabras, Detalle, qué se puede hacer en cada reunión, to-dos): `references/formato.md`.
 - Cómo era en Notion (solo por si hubiera que volver atrás): `references/notion.md`.
 
 Lee `formato.md` antes de la primera escritura de la sesión.
@@ -34,7 +34,7 @@ Lee `formato.md` antes de la primera escritura de la sesión.
 1. **`tipos.json`**: está en la raíz del repo, `~/6grados-es/6g-reuniones/tipos.json`. Si el repo está en otro sitio, sigue el enlace de la skill (`readlink ~/.claude/skills/6g-reuniones`) y sube dos niveles. Es la fuente única de tipos de reunión, personas (ids de Notion y alias), data source, propiedades y días de to-dos. No hardcodees nada de lo que esté ahí. Los tipos con `"oculto": true` no existen para el equipo: no los ofrezcas.
    Si no está el repo, no hay comando: di que hace falta clonarlo (`skill/README.md` del repo `6grados-es/6g-reuniones`) y para.
 2. **Identidad**: lee `~/.claude/skills/6g-reuniones/.cache/identidad.json` (`{"persona":"pedro","nombre":"Pedro","notion":"<id>","resuelto_at":"AAAA-MM-DD"}`). Si falta, ejecuta **SETUP**. Si dicen «no soy yo», bórralo y vuelve a preguntar. Esa persona es el prefijo por defecto (`Nombre - `). Si la línea es de otra («apunta que Santi…», «de Pablo»), usa esa.
-3. **Conexión**: todo va por **el comando** `node <repo>/bin/reuniones.mjs …`. Es el mismo código que la web, así que aplica solo todas las reglas: las 15 palabras y el Detalle, no duplicar, el Revisar heredado, la fecha de cada paso y qué se puede hacer en cada reunión. Sin argumentos enseña la ayuda.
+3. **Conexión**: todo va por **el comando** `node <repo>/bin/reuniones.mjs …`. Es el mismo código que la web, así que aplica solo todas las reglas: el Detalle, no duplicar, el Revisar heredado, la fecha de cada paso y qué se puede hacer en cada reunión. Sin argumentos enseña la ayuda.
    - Pruébalo con `node bin/reuniones.mjs quien`: dice con qué nombre está conectado este ordenador.
    - Si dice que **no está conectado**, la persona tiene que hacerlo una vez (tú no puedes, es su clave): entrar en https://reuniones-henna.vercel.app → Ajustes → «Conectar Claude» → «Crear mi clave», y pegar en su terminal el comando que le da (`node …/bin/reuniones.mjs conectar <clave>`). La clave vale un año y se guarda en `~/.config/6grados/reuniones.clave`. No la pidas por el chat ni la imprimas.
    - Si el comando no funciona y no puedes arreglarlo, avisa y **no escribas nada** (y nunca en Notion).
@@ -119,7 +119,7 @@ Para una reunión sin las cuatro secciones base (una Daily o Weekly antigua, o u
    - **Parking:** los temas aparcados (con sus subtítulos Warm, Contenido… como `grupo`). **Aparcados y mejoras:** los pasos que no son para mañana.
    - En la Weekly, **Celebración**, **Resumen de la semana** y **Postmoto** si la página los tiene.
    - **Siguientes pasos:** a lo que alguien se compromete.
-   - Cada línea es `Persona - enunciado` de ≤15 palabras, y lo largo va al Detalle.
+   - Cada línea es `Persona - enunciado`, una idea por línea; lo accesorio va al Detalle.
    - No inventes ni pierdas nada: lo que no sepas de quién es, pregúntalo. **Ni un punto que no esté en la página** (Santi, Daily 13-nov: «ese punto no estaba y te lo has inventado»), y cada uno en su sección: un tema no va a Informar.
 3. **Enséñala numerada por secciones y espera el ok.** Nada se toca sin él.
 4. Con el ok, escribe la propuesta en un JSON y aplica: `formatear <id> --aplicar propuesta.json`. El JSON lleva `{"revisar":[…],"informar":[…],"temas":[…],"pasos":[…]}` y, si hay, `parking`, `aparcados`, `celebracion`, `resumen`, `postmoto`. Cada línea puede ser un texto o `{"texto","detalle":[…],"hecho":bool,"visto":bool,"grupo":"Apartado"}`. Una sección opcional con lista vacía (`"celebracion": []`) se crea vacía; `"previo": ["Plaud grabando"]` son las casillas de antes de la primera sección.
@@ -132,7 +132,7 @@ La web, en una reunión sin formato, enseña este camino y copia la petición pa
 ### AÑADIR (informar · tema · siguiente paso)
 
 1. Encuentra la reunión. Sección según la intención: Informar (lo que alguien cuenta), Temas (lo que hay que hablar o decidir; una propuesta empieza por «Propuesta: »), Siguientes pasos (lo que alguien se compromete a hacer).
-2. Redacta la línea sin el nombre (el comando lo pone con `--persona`). Si lo dicho cabe en 15 palabras con el nombre, va tal cual. Si es más largo, **resume tú** a una línea clara y pasa el resto con `--detalle`, una opción por idea, sin perder datos. Si aun así pasa de 15, el comando la corta y manda lo que sobra al Detalle.
+2. Redacta la línea sin el nombre (el comando lo pone con `--persona`). No hay límite de palabras (desde el 16-nov-2026): una idea clara por línea; los datos o matices accesorios, con `--detalle`, sin perder nada.
 3. Siguientes pasos: la persona es quien se compromete, aunque lo diga otro. **Lleva fecha siempre** (`--fecha hoy|mañana|lunes…viernes|18/11|2026-11-18`): si no la han dicho, pregúntala («¿para cuándo?») en vez de inventarla; si no es para ya, va a `aparcados`. Sin fecha, el comando no lo añade.
 4. Si la línea ya existe, el comando lo dice y no la duplica.
 5. Eco de una línea con lo escrito y el enlace: `✅ Informar · Pedro - Cliente X: sesión 3 dada. · <enlace>`.
@@ -151,7 +151,7 @@ Solo en la **reunión de trabajo** (la de hoy o una futura); en una pasada, dilo
 - **Aparcar** (`aparcar …`): no es para ya. La copia va a «Aparcados y mejoras», sin fecha; en «Revisar» se queda como **aparcada**.
 - **Fecha** (`fecha … F`): corrige el día de un paso de «Siguientes pasos» de la reunión de hoy. Lo que ya está en «Revisar» solo cambia de fecha con ↓.
 - **Quitar**: la línea va a la papelera (se puede recuperar desde la web, con «Deshacer», en el momento). Confirma antes si no es una línea que acabes de escribir tú.
-- **Editar**: corrige el texto (máximo 15 palabras); el Detalle se queda.
+- **Editar**: corrige el texto (sin límite de palabras); el Detalle se queda.
 
 ### ASIGNAR · VISTO
 
@@ -171,7 +171,7 @@ Se pueden hacer en cualquier reunión, como marcar.
 ### TRANSCRIPCIÓN
 
 1. Con el comando y Plaud conectado: `plaud <tipo> [--dia D]` dice qué grabación es (la que empieza a la hora de la reunión, sacada del calendario), y su estado. `--md` saca la transcripción literal con hablantes y minuto. Si aún no está transcrita, la API oficial de Plaud no puede pedirlo: da el enlace (`--procesar` lo imprime) para que la persona pulse «Generar» en Plaud. Si Plaud no está conectado en esa máquina (`~/.plaud/tokens.json`), `npx -y @plaud-ai/cli@0.3.15 login` lo conecta entrando con Google (hola@6grados.es → «Autorizar»), o invoca la skill `6g-plaud` (por el navegador). `bin/plaud-conectar.mjs` es solo para reconectar la web. Si no está instalada, dilo (README) y ofrece que peguen la transcripción.
-2. **No pegues la transcripción en la reunión.** Propón, en lista numerada, lo que saldría como líneas: Informar, Temas, Siguientes pasos, con persona y ≤15 palabras cada una.
+2. **No pegues la transcripción en la reunión.** Propón, en lista numerada, lo que saldría como líneas: Informar, Temas, Siguientes pasos, con persona y una idea por línea.
 3. Atribuye solo lo que tenga hablante de seguridad alta. Lo dudoso va aparte, sin persona.
 4. Con los números que elijan, aplica AÑADIR.
 

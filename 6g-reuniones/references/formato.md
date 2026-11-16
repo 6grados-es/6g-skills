@@ -54,6 +54,16 @@ Desde el 15-nov-2026 (lo pidieron Santi, Pablo y Pedro en la Daily del 13-nov: �
 
 Una casilla pasada o aparcada en Revisar no es una tarea hecha: es el rastro de que se pasó o se aparcó. Para las tareas de cada persona solo cuenta su copia viva.
 
+## Revisar por fecha y lo de otro día
+
+- En Revisar sale primero lo de hoy, luego lo atrasado y lo que no tiene fecha.
+- Una línea sin fecha que dice el día en el texto («… - Martes», «18/11») toma ese día (el más cercano a la reunión, de 3 días antes a 3 después).
+- Lo que es para **después** de la reunión sale aparte, «De otros días · solo para ver»: no se pasa ni se aparca y **no cuenta en el cumplimiento**.
+
+## Plantilla de la Weekly (desde el 16-nov-2026)
+
+Casillas de inicio: Plaud grabando · Prework 5 min · Roles (por defecto «Pedro presenta · Santi temas · Pablo tareas»; se edita). Luego Celebración · Resumen de la semana (datos fijos con enlace: CRM, rocas, cumplimiento y vídeos, y arriba el % de to-dos y de temas por persona de la semana anterior) · Postmoto (Qué fue bien · Qué fue mal · Aprendizajes · Siguientes pasos) · **Nueva semana** (rocas de esta semana) · Revisar · Temas · Parking · Siguientes pasos · Aparcados. La Daily lleva Plaud, prework y roles; producto y redes, el prework.
+
 ## Reuniones recurrentes
 
 Producto, redes, Daily y Weekly se crean solas (`recurrente` en `tipos.json`). Toca el día que hay evento de su tipo en el calendario de 6 Grados, a su hora. Producto, sin serie propia, va los días de Daily: a su hora si tiene evento o, si no, al acabar la Daily. Sin calendario, se usan los `dias` (1 = lunes) y la `hora` de `tipos.json`. Nunca se duplica: si alguien ya la creó, no se toca. Las crea una rutina del Mac de Pedro cada 30 min, de lunes a viernes, como red de seguridad: solo si a 1 h de empezar nadie la ha creado (`rutina.antes_min`), para no adelantarse a quien las crea siempre (el Claude de Santi, Pablo). Desde la skill o desde la web (apartado «Recurrentes») se pueden crear antes.
@@ -63,8 +73,8 @@ Al formatear una reunión, las líneas de **Revisar** se copian con su texto exa
 ## Cada línea
 
 - Empieza por la persona: `Pedro - enunciado`. La persona es quien lo trae (informar, temas) o quien se compromete (siguientes pasos). Si la línea ya empieza por el nombre de otra persona («Santi - …»), se respeta; si lo lleva al final («Factura - Pedro»), al añadirla pasa delante («Pedro - Factura»). Lo ya escrito no se reescribe: las casillas se casan por texto.
-- Máximo **15 palabras**. Se cuentan las palabras de la línea entera, **nombre incluido**; el guion de «Pedro - » no cuenta. «Pedro - Cliente X: sesión 3 dada» son 6.
-- Si pasa de 15, la línea se corta en ≤14 palabras (mejor en una coma o un punto, si lo hay a partir de la sexta palabra) y termina en «…». Lo que sobra va, empezando por «…», como primera viñeta del desplegable (`toggle`) **Detalle**, hijo de la línea. Así no se pierde nada. La web y el comando lo hacen solos; a mano (conector de Notion), igual.
+- **Sin límite de palabras** desde el 16-nov-2026 (Weekly: «quitar el límite de caracteres»). La línea entra entera; aun así, mejor una idea por línea y clara. El **Detalle** sigue: para datos o matices que no hacen falta en la línea. Las líneas viejas cortadas con «…» no se reescriben (se casan por texto).
+- En la web, cada persona tiene su icono delante del nombre (Santi 🧙, Pablo 🏎️, Pedro 🥷, María 👩‍🌾, Alejo 🐢; `icono` en `tipos.json`). El icono **nunca** va dentro del texto.
 - Líneas simples: sin negritas ni listas dentro de la línea.
 - No se repite una línea que ya está, igual, en su sección.
 
@@ -103,7 +113,7 @@ Al formatear una reunión, las líneas de **Revisar** se copian con su texto exa
 - **Hecho (✓)**: se marca la casilla en esta reunión y, si está en «Revisar», también la de texto idéntico en la reunión anterior (en sus Siguientes pasos o en su Revisar). El texto es idéntico porque se copió tal cual: así se encuentra.
 - **Sigue pendiente (↓)**: con fecha nueva. La copia va al final de «Siguientes pasos» de esta reunión (igual, con su Detalle, la fecha y «↓n») y la de «Revisar» se queda como pasada. En la reunión anterior no se toca nada.
 - **Quitar** = a la papelera (recuperable). «Deshacer» devuelve la misma línea a su sitio.
-- **Editar** corrige el texto (máximo 15 palabras); el Detalle no se toca.
+- **Editar** corrige el texto (sin límite de palabras); el Detalle no se toca.
 - **Cambiar de persona**: se sustituye el nombre (o alias) que hay en la línea por el de la otra persona; si no hay ninguno, se pone «Nombre - » delante. En «Revisar», también en la gemela de la reunión anterior. La web lo hace con un desplegable en cada línea y en la lista de tareas.
 - **Visto** (Informar y Temas): el punto ya se ha tratado. El texto no cambia; en la web sale atenuado.
 
