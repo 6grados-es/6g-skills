@@ -1,0 +1,10 @@
+[
+  {"n": 1, "fase": "A", "fotograma": 45, "titulo": "Leer el mensaje del cliente", "inicio": 0, "fin": 40,
+   "texto": "Llega por WhatsApp una foto del DNI, la jornada y el número de la Seguridad Social.",
+   "campos": ["Foto del DNI", "Jornada", "N.º Seguridad Social"], "clic": null,
+   "difuminar": [[0.60, 0.15, 0.95, 0.80]]},
+  {"n": 2, "fase": "B", "fotograma": 200, "titulo": "Abrir la empresa del cliente", "inicio": 90, "fin": 105,
+   "texto": "En «Empresas existentes» se busca al cliente y se abre.",
+   "campos": ["Nombre del cliente"], "clic": [0.52, 0.31],
+   "difuminar": [[0.10, 0.28, 0.45, 0.34]]}
+]
