@@ -62,7 +62,7 @@ Una casilla pasada o aparcada en Revisar no es una tarea hecha: es el rastro de 
 
 ## Plantilla de la Weekly (desde el 16-nov-2026)
 
-Casillas de inicio: Plaud grabando · Prework 5 min · Roles (por defecto «Pedro presenta · Santi temas · Pablo tareas»; se edita). Luego Celebración · Resumen de la semana (datos fijos con enlace: CRM, rocas, cumplimiento y vídeos, y arriba el % de to-dos y de temas por persona de la semana anterior) · Postmoto (Bien · Mal · Aprendizaje · Mejora; en la web, cada apartado con su propia línea para apuntar) · **Nueva semana** (rocas de esta semana) · Revisar · Temas · Parking · Siguientes pasos · Aparcados. La Daily lleva Plaud, prework y roles; producto y redes, el prework.
+Casillas de inicio: Plaud grabando · Prework 5 min · Roles (por defecto «Pedro presenta · Santi temas · Pablo tareas»; se edita). Luego Celebración · Resumen de la semana (datos fijos con enlace: CRM, rocas, cumplimiento y vídeos, y arriba el % de to-dos y de temas por persona de la semana anterior) · Postmoto (Bien · Mal · Aprendizaje · Mejora; en la web, cada apartado con su propia línea para apuntar) · **Nueva semana** (rocas de esta semana) · Revisar · Temas · Parking · Siguientes pasos · Aparcados. La Daily lleva Plaud, prework y roles; producto y redes, Plaud y prework.
 
 ## Reuniones recurrentes
 
