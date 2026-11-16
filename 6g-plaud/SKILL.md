@@ -59,7 +59,8 @@ Plaud diariza («Speaker 1, 2…») pero casi nunca pone nombre. Nunca entregues
 3. **Comprueba los cruces**: Plaud a veces parte a una persona en dos Speakers o junta a dos en uno. Si un mismo Speaker dice cosas incompatibles («mi clínica» y luego «tu clínica»), sepáralo por turnos y márcalo.
 4. **Entrega una tabla** al principio: `Speaker N → Nombre (rol) · cómo lo sé · seguridad alta/media/baja`. En las citas usa el nombre, no el Speaker.
 5. **Ante la duda, no atribuyas.** Una frase de hablante dudoso no se usa como cita de cliente ni como compromiso de nadie; se deja aparte.
-6. Si la persona quiere, cambia también los nombres en la web de Plaud (editar hablante en la transcripción) para que queden para siempre.
+6. **Corrige los nombres también en Plaud, siempre** (no solo en tu respuesta), para que la grabación quede bien para todo el equipo y para la próxima vez que se lea (la API y `reuniones.mjs plaud --md` ya devuelven el nombre corregido). Solo los de seguridad alta; a los dudosos no los toques. Cómo: pestaña «Transcripción» → pulsa el nombre «Speaker N» de un turno → escribe el nombre → «Aplicar a todos los segmentos de este orador» → «Guardar» (sale «Nombre del orador actualizado correctamente»). Los nombres se escriben siempre igual: `Santi`, `Pablo`, `Alejo`, `Pedro`, `María`… (luego salen en «Nombres usados recientemente»). Si el campo no activa «Guardar» tras escribir, pulsa espacio y borrar. La lista es virtual: busca el turno de ese hablante desplazando hasta él.
+7. **Por qué hay que hacerlo cada vez:** Plaud solo reconoce de forma automática **una voz por cuenta** (Configuración → Preferencias → «Etiquetar mi voz automáticamente» → «Tu perfil de voz»), y en hola@6grados.es esa voz es la de Pedro. A los demás los saca siempre como «Speaker N»; renombrarlos en una grabación no le enseña su voz para las siguientes. Comprobado el 13-nov-2026.
 
 ### Grabaciones de fuera de Plaud (otra grabadora, notas de voz)
 
@@ -80,6 +81,6 @@ Si la grabación está en otra app y no separa hablantes, súbela a Plaud:
 
 ## Reglas
 
-- Solo lectura: no borres, renombres ni muevas grabaciones. Excepciones con el ok de la persona: «Generar transcripción» y renombrar hablantes.
+- Solo lectura: no borres, renombres ni muevas grabaciones. Excepciones: renombrar hablantes de seguridad alta (siempre, paso 6) y «Generar transcripción» (con el ok de la persona).
 - Las grabaciones tienen conversaciones de clientes: no copies conversaciones enteras a memoria ni a Notion; saca solo lo que el trabajo necesita.
 - Nunca metas credenciales ni códigos, ni aceptes condiciones por la persona.

@@ -2,13 +2,15 @@
 name: 6g-reuniones
 description: >-
   El conector con Claude de las reuniones de equipo de 6 Grados (producto, redes, daily, weekly), que viven
-  en la base «Reuniones de Equipo» de Notion. Añade informar, temas y siguientes pasos a una reunión, marca
+  en la base propia de Reuniones (la de la web Reuniones; desde el 15-nov-2026 ya no en Notion). Añade informar, temas y siguientes pasos a una reunión, marca
   casillas como hechas, pasa pendientes, quita o corrige líneas, crea la reunión del día con lo pendiente de la
   anterior, crea las reuniones recurrentes que falten, pasa al formato una reunión desordenada (propuesta y, con
-  ok, la aplica), lista los to-dos de una persona y trae la transcripción de Plaud. Usa el mismo código y las
-  mismas reglas que la web Reuniones (los botones): la fuente de verdad es Notion. Invócala SIEMPRE que digan
+  ok, la aplica), lista los to-dos de una persona, da el cumplimiento (hechos frente a pasados) y trae la
+  transcripción de Plaud. Cada siguiente paso lleva fecha. Usa el mismo código y las
+  mismas reglas que la web Reuniones (los botones): la fuente de verdad es esa base, no Notion. Invócala SIEMPRE que digan
   «añade un tema a la reunión» (de producto o de redes), «añade un punto de informar», «apunta un siguiente
-  paso», «marca como hecho X», «quita la línea X», «qué to-dos tengo», «qué to-dos tiene Santi», «qué quedó
+  paso», «marca como hecho X», «pásalo al jueves», «apárcalo», «quita la línea X», «qué to-dos tengo», «qué
+  to-dos tiene Santi», «cómo vamos de cumplimiento», «qué quedó
   pendiente de la anterior», «crea la reunión de producto (o de redes, daily, weekly) de hoy», «crea las
   reuniones de hoy», «qué reuniones recurrentes hay», «formatea la daily de hoy», «pon esta reunión en el
   formato», «la transcripción de la reunión X» o «/6g-reuniones».
@@ -18,28 +20,30 @@ Se lanza: a demanda («añade un tema a producto», «apunta un siguiente paso»
 
 # Skill · 6g-reuniones
 
-El conector con Claude de las reuniones de 6 Grados. Todo se lee y se escribe en Notion (base «Reuniones de Equipo»). La web Reuniones (https://reuniones-henna.vercel.app) hace lo mismo con botones sobre las mismas páginas: lo que escribes aquí lo ve allí y al revés.
+El conector con Claude de las reuniones de 6 Grados. Todo se lee y se escribe en la base propia de Reuniones, con el comando `bin/reuniones.mjs`. La web Reuniones (https://reuniones-henna.vercel.app) hace lo mismo con botones sobre las mismas reuniones: lo que escribes aquí se ve allí y al revés.
+
+**Notion ya no se usa** (desde el 15-nov-2026). Todas las reuniones que había allí se pasaron a la base (el 16-nov-2026, también las antiguas); las páginas de Notion quedan como copia vieja, que ya no se actualiza. **Nunca escribas una reunión en Notion**, ni con el conector de Notion ni por REST: nadie lo vería en la web.
 
 - Formato y reglas (4 H1, «Persona - enunciado», 15 palabras, Detalle, qué se puede hacer en cada reunión, to-dos): `references/formato.md`.
-- Cómo operar con Notion sin el comando (conector de Notion o REST): `references/notion.md`.
+- Cómo era en Notion (solo por si hubiera que volver atrás): `references/notion.md`.
 
-Léelos antes de la primera escritura de la sesión.
+Lee `formato.md` antes de la primera escritura de la sesión.
 
-## Paso 0 · Datos, identidad y vía (siempre)
+## Paso 0 · Datos, identidad y conexión (siempre)
 
 1. **`tipos.json`**: está en la raíz del repo, `~/6grados-es/6g-reuniones/tipos.json`. Si el repo está en otro sitio, sigue el enlace de la skill (`readlink ~/.claude/skills/6g-reuniones`) y sube dos niveles. Es la fuente única de tipos de reunión, personas (ids de Notion y alias), data source, propiedades y días de to-dos. No hardcodees nada de lo que esté ahí. Los tipos con `"oculto": true` no existen para el equipo: no los ofrezcas.
-   Si no está el repo (skill instalada desde `6g-skills`), baja solo `tipos.json`: `mkdir -p ~/.claude/skills/6g-reuniones/.cache && gh api repos/6grados-es/6g-reuniones/contents/tipos.json --jq .content | base64 -d > ~/.claude/skills/6g-reuniones/.cache/tipos.json` (vuelve a bajarlo si tiene más de un día). Si tampoco puedes, di que hace falta acceso a `6grados-es` y para.
+   Si no está el repo, no hay comando: di que hace falta clonarlo (`skill/README.md` del repo `6grados-es/6g-reuniones`) y para.
 2. **Identidad**: lee `~/.claude/skills/6g-reuniones/.cache/identidad.json` (`{"persona":"pedro","nombre":"Pedro","notion":"<id>","resuelto_at":"AAAA-MM-DD"}`). Si falta, ejecuta **SETUP**. Si dicen «no soy yo», bórralo y vuelve a preguntar. Esa persona es el prefijo por defecto (`Nombre - `). Si la línea es de otra («apunta que Santi…», «de Pablo»), usa esa.
-3. **Vía para Notion**, en este orden:
-   1. **El comando** `node <repo>/bin/reuniones.mjs …`. Es el mismo código que la web, así que aplica solo todas las reglas: las 15 palabras y el Detalle, no duplicar, el Revisar heredado, la fecha que Notion pisa al crear y qué se puede hacer en cada reunión. Sirve si está el repo y hay `NOTION_TOKEN` (en el entorno o en `~/.config/notion/credentials`). Pruébalo con `node bin/reuniones.mjs hoy`. Sin argumentos enseña la ayuda.
-   2. Si no, **el conector de Notion** (`notion-search`, `notion-fetch`, `notion-update-page`, `notion-create-pages`), siguiendo `references/notion.md` y aplicando tú las reglas de `formato.md`.
-   3. Si no hay ninguna de las dos, avisa y no escribas nada.
+3. **Conexión**: todo va por **el comando** `node <repo>/bin/reuniones.mjs …`. Es el mismo código que la web, así que aplica solo todas las reglas: las 15 palabras y el Detalle, no duplicar, el Revisar heredado, la fecha de cada paso y qué se puede hacer en cada reunión. Sin argumentos enseña la ayuda.
+   - Pruébalo con `node bin/reuniones.mjs quien`: dice con qué nombre está conectado este ordenador.
+   - Si dice que **no está conectado**, la persona tiene que hacerlo una vez (tú no puedes, es su clave): entrar en https://reuniones-henna.vercel.app → Ajustes → «Conectar Claude» → «Crear mi clave», y pegar en su terminal el comando que le da (`node …/bin/reuniones.mjs conectar <clave>`). La clave vale un año y se guarda en `~/.config/6grados/reuniones.clave`. No la pidas por el chat ni la imprimas.
+   - Si el comando no funciona y no puedes arreglarlo, avisa y **no escribas nada** (y nunca en Notion).
 
 ### SETUP (primera vez en la máquina, o «instala» / «configura»)
 
 1. Pregunta «¿quién eres?» con las personas de `tipos.json` en lista numerada y guarda `.cache/identidad.json`.
-2. Prueba el acceso: `node bin/reuniones.mjs hoy` o, sin repo, `notion-fetch` del data source (`collection://<data_source>`). Si falla, dile que conecte Notion con acceso al espacio de 6 Grados.
-3. Confirma en una línea: `✅ Listo. Eres <nombre>. Acceso a Reuniones de Equipo OK.` No toques instrucciones globales ni otros archivos.
+2. Prueba la conexión: `node bin/reuniones.mjs quien`. Si no está conectado, explica los dos pasos de arriba (Ajustes → «Conectar Claude» → pegar el comando) y espera a que lo haga.
+3. Confirma en una línea: `✅ Listo. Eres <nombre>. Conectado con Reuniones.` No toques instrucciones globales ni otros archivos.
 
 ## Paso 1 · Enruta por intención
 
@@ -50,9 +54,15 @@ Léelos antes de la primera escritura de la sesión.
 | «formatea la daily de hoy», «ponla en el formato», «ordena esta reunión» | FORMATEAR | `formatear daily [--dia D]` y luego `formatear <id> --aplicar propuesta.json` |
 | «añade a informar…», «para informar: …» | AÑADIR → Informar | `anadir producto informar "…" --persona pedro [--detalle "…"]` |
 | «añade un tema…», «propuesta: …», «hay que hablar de…» | AÑADIR → Temas | `anadir producto temas "…" --persona pedro` |
-| «apunta un siguiente paso», «X se encarga de…», «me comprometo a…» | AÑADIR → Siguientes pasos | `anadir producto pasos "…" --persona santi` |
+| «apunta un siguiente paso», «X se encarga de…», «me comprometo a…» | AÑADIR → Siguientes pasos (**siempre con fecha**) | `anadir producto pasos "…" --persona santi --fecha miércoles` |
+| «apárcalo», «al parking», «para más adelante» | AÑADIR → Parking (tema) o Aparcados y mejoras (paso) | `anadir daily parking "…"` · `anadir daily aparcados "…"` |
+| «celebramos…», «dato de la semana», «postmoto: …» (Weekly) | AÑADIR → Celebración / Resumen de la semana / Postmoto | `anadir weekly celebracion "…"` · `anadir weekly postmoto "…" --grupo "Qué fue bien"` |
+| «sube X del parking», «pasa X a temas», «aparca X» | MOVER | `mover-a daily "X" temas` (destinos: las secciones de esa reunión, salvo Revisar) |
 | «marca como hecho X», «ya está lo de X» | HECHO | `marcar producto "X"` (`--no` para desmarcar) |
-| «pasa X a siguientes pasos», «sigue pendiente X», «↓» | PENDIENTE | `pasar producto "X"` |
+| «sigue pendiente X», «pásalo al jueves», «↓» | PENDIENTE (con fecha nueva; cuenta como pasada) | `pasar producto "X" --fecha jueves` |
+| «aparca X», «eso no es para ya» (una línea de Revisar o un paso) | APARCAR | `aparcar daily "X"` |
+| «cámbiale la fecha a X», «X es para el viernes» (paso de la reunión de hoy) | FECHA | `fecha daily "X" viernes` |
+| «cómo vamos de cumplimiento», «qué porcentaje cumplimos» | CUMPLIMIENTO | `cumplimiento [--semanas 4]` |
 | «quita X», «borra la línea X» | QUITAR | `quitar producto "X"` |
 | «corrige X por Y» | EDITAR | `editar producto "X" "Y"` |
 | «eso es de Santi», «pásale X a Pablo» | ASIGNAR | `asignar producto "X" santi` |
@@ -61,16 +71,15 @@ Léelos antes de la primera escritura de la sesión.
 | «qué quedó pendiente de la anterior», «cómo va la reunión» | CONSULTAR | `leer producto [--dia D]` |
 | «la transcripción de la reunión X», «qué se dijo en…» | TRANSCRIPCIÓN | `plaud producto [--md]`; si Plaud no está conectado, skill `6g-plaud` |
 
-`producto` puede ser cualquier tipo de `tipos.json` (la reunión de ese tipo de hoy, o la de `--dia`) o el id de la página. Las líneas se buscan por texto, exacto o una parte. Si casan varias, el comando lista los ids para elegir.
+`producto` puede ser cualquier tipo de `tipos.json` (la reunión de ese tipo de hoy, o la de `--dia`) o el id de la reunión (sale en `hoy` y en su enlace). Las líneas se buscan por texto, exacto o una parte. Si casan varias, el comando lista los ids para elegir.
 
-## Encontrar la reunión (sin el comando)
+## Encontrar la reunión
 
-1. **Tipo.** Por `reconocer` de `tipos.json` («producto», «redes», «daily», «weekly»). Si no lo dicen, busca la reunión de hoy de los tipos de formato nuevo en los que está la persona: si hay una sola, esa; si hay varias, pregunta con lista numerada.
-2. **Fecha.** La dicha; por defecto, hoy.
-3. **Título.** El patrón `titulo` del tipo con la fecha AAAA-MM-DD: `Reunión de producto 2026-11-12`, `Daily Contenido 2026-11-12`, `Daily 6G 2026-11-12`.
-4. **Buscar** con `notion-search` el título exacto y `notion-fetch` de la página. Comprueba el título y los 4 H1.
-5. **Si no existe:** ofrece crearla (CREAR). Si dicen «la última», la más reciente del tipo.
-6. **Reunión anterior del mismo tipo** = la más reciente con fecha anterior y título del tipo (`reconocer`), no archivada. `Tipo de Reunion` solo no basta: Daily y Weekly comparten «L10».
+1. **Tipo.** Por `reconocer` de `tipos.json` («producto», «redes», «daily», «weekly»). Si no lo dicen, mira las de hoy (`hoy`) en las que está la persona: si hay una sola, esa; si hay varias, pregunta con lista numerada.
+2. **Fecha.** La dicha (`--dia AAAA-MM-DD`); por defecto, hoy.
+3. **Si no existe:** el comando lo dice («No hay reunión de … el …»). Ofrece crearla (CREAR).
+4. **Reunión anterior** = la más reciente de su cadena con fecha anterior (la Daily y la Weekly se siguen la una a la otra). `leer` la nombra junto a «Revisar».
+5. **Reuniones anteriores al 13-nov-2026:** están en la base, traídas de Notion tal cual (casi todas sin formato: solo se leen). `hoy --dia D` da su id y `leer <id>` la enseña; también salen en el Historial de la web.
 
 ## Modos
 
@@ -80,10 +89,12 @@ Léelos antes de la primera escritura de la sesión.
 2. **Confirma antes de crear** en una línea: título, fecha y hora, equipo y cuántas casillas se arrastran de la anterior.
 3. Con el comando: `crear <tipo> --dia D --hora HH:MM`. Hace todo:
    - no duplica si ya existe;
-   - copia a «Revisar» lo sin marcar de la anterior (sus Siguientes pasos y lo de su Revisar que nadie resolvió; si la anterior es de formato antiguo, sus casillas sin marcar que llevan persona), sin repetir;
-   - vuelve a poner la fecha cuando la automatización de la base la pisa.
-
-   Sin el comando: `references/notion.md` → «Crear una reunión», con esas mismas reglas.
+   - monta la **plantilla del tipo** (`plantilla` en `tipos.json`): las secciones en su orden, los apartados («Puntos fijos», «Temas nuevos»…) y los puntos fijos con su enlace. La Daily y la Weekly llevan «Plaud grabando», Puntos fijos (embudo, oferta, rocas; la Weekly, también vídeos), Parking y Aparcados y mejoras; la Weekly, además, Celebración, Resumen de la semana y Postmoto;
+   - copia a «Revisar» lo sin marcar de la anterior (sus Siguientes pasos y lo de su Revisar que nadie resolvió), sin repetir;
+   - **arrastra** el Parking y los Aparcados de la anterior (también el apartado «Parking» de Temas);
+   - la «anterior» es la de su **cadena**: la Daily y la Weekly se siguen la una a la otra (`cadena` en `tipos.json`);
+   - a «Revisar» va lo que vence ese día o antes (y lo que no tiene fecha); lo de fecha posterior va a «Siguientes pasos», con su fecha;
+   - nunca escribe líneas inventadas: lo que no trae nada queda vacío.
 4. Eco: `✅ Creada · <título> · <n> pendientes en Revisar · <enlace>`.
 
 Desde el 13-nov-2026 todos los tipos nacen en formato nuevo, también la Daily 6G y la Weekly 6G (decisión de Pedro). Las anteriores siguen como estaban (ver FORMATEAR).
@@ -99,20 +110,21 @@ Producto, redes, Daily y Weekly se crean solas (`recurrente` de cada tipo en `ti
 
 ### FORMATEAR (pasar al formato una reunión desordenada)
 
-Para una reunión sin las cuatro secciones (una Daily o Weekly antigua, o una página escrita a mano):
-1. `formatear <reunión> [--dia D]` enseña la página en Markdown y lo que quedó sin marcar en la anterior.
+Para una reunión sin las cuatro secciones base (una Daily o Weekly antigua, o una página escrita a mano):
+1. `formatear <reunión> [--dia D]` enseña la reunión en Markdown y lo que quedó sin marcar en la anterior.
 2. **Haz tú la propuesta** con las reglas de `formato.md`:
-   - **Revisar:** lo pendiente (casillas de «To-do's ayer», lo sin marcar de la anterior), con su estado y con su **texto exacto**: sin reformular, sin mover el nombre y sin cortar. Se casa por texto con la reunión anterior (marcar la gemela) y con las tareas de cada persona; si cambia, se separan. El comando no las corta.
+   - **Revisar:** lo pendiente (casillas de «To-do's ayer», lo sin marcar de la anterior), con su estado y con su **texto exacto**: sin reformular, sin mover el nombre y sin cortar. Las tareas de cada persona se casan por texto entre reuniones; si cambia, se separan. El comando no las corta.
    - **Informar:** lo que alguien cuenta (actualizaciones).
-   - **Temas:** lo que hay que hablar o decidir, también lo del Parking.
+   - **Temas:** lo que hay que hablar o decidir. Con apartados si la plantilla del tipo los tiene («Puntos fijos», «Temas nuevos»).
+   - **Parking:** los temas aparcados (con sus subtítulos Warm, Contenido… como `grupo`). **Aparcados y mejoras:** los pasos que no son para mañana.
+   - En la Weekly, **Celebración**, **Resumen de la semana** y **Postmoto** si la página los tiene.
    - **Siguientes pasos:** a lo que alguien se compromete.
    - Cada línea es `Persona - enunciado` de ≤15 palabras, y lo largo va al Detalle.
-   - No inventes ni pierdas nada: lo que no sepas de quién es, pregúntalo.
+   - No inventes ni pierdas nada: lo que no sepas de quién es, pregúntalo. **Ni un punto que no esté en la página** (Santi, Daily 13-nov: «ese punto no estaba y te lo has inventado»), y cada uno en su sección: un tema no va a Informar.
 3. **Enséñala numerada por secciones y espera el ok.** Nada se toca sin él.
-4. Con el ok, escribe la propuesta en un JSON y aplica: `formatear <id> --aplicar propuesta.json`. El JSON lleva `{"revisar":[…],"informar":[…],"temas":[…],"pasos":[…]}`, y cada línea puede ser un texto o `{"texto","detalle":[…],"hecho":bool,"visto":bool}`.
-   - El comando añade las cuatro secciones y un desplegable «Antes de formatear» con la página de antes en Markdown.
-   - Manda los bloques de antes a la papelera de Notion, donde se pueden recuperar. Las subpáginas no se tocan.
-   - En una página que ya tiene el formato, solo con `--forzar`.
+4. Con el ok, escribe la propuesta en un JSON y aplica: `formatear <id> --aplicar propuesta.json`. El JSON lleva `{"revisar":[…],"informar":[…],"temas":[…],"pasos":[…]}` y, si hay, `parking`, `aparcados`, `celebracion`, `resumen`, `postmoto`. Cada línea puede ser un texto o `{"texto","detalle":[…],"hecho":bool,"visto":bool,"grupo":"Apartado"}`. Una sección opcional con lista vacía (`"celebracion": []`) se crea vacía; `"previo": ["Plaud grabando"]` son las casillas de antes de la primera sección.
+   - El comando pone las secciones (las cuatro base siempre; las demás si traen líneas) y conserva la reunión de antes, en Markdown.
+   - En una reunión que ya tiene el formato, solo con `--forzar`.
 5. Eco: `✅ <título> ya está en el formato: n en Revisar, n en Informar… · <enlace>`.
 
 La web, en una reunión sin formato, enseña este camino y copia la petición para Claude.
@@ -121,55 +133,57 @@ La web, en una reunión sin formato, enseña este camino y copia la petición pa
 
 1. Encuentra la reunión. Sección según la intención: Informar (lo que alguien cuenta), Temas (lo que hay que hablar o decidir; una propuesta empieza por «Propuesta: »), Siguientes pasos (lo que alguien se compromete a hacer).
 2. Redacta la línea sin el nombre (el comando lo pone con `--persona`). Si lo dicho cabe en 15 palabras con el nombre, va tal cual. Si es más largo, **resume tú** a una línea clara y pasa el resto con `--detalle`, una opción por idea, sin perder datos. Si aun así pasa de 15, el comando la corta y manda lo que sobra al Detalle.
-3. Siguientes pasos: la persona es quien se compromete, aunque lo diga otro.
+3. Siguientes pasos: la persona es quien se compromete, aunque lo diga otro. **Lleva fecha siempre** (`--fecha hoy|mañana|lunes…viernes|18/11|2026-11-18`): si no la han dicho, pregúntala («¿para cuándo?») en vez de inventarla; si no es para ya, va a `aparcados`. Sin fecha, el comando no lo añade.
 4. Si la línea ya existe, el comando lo dice y no la duplica.
 5. Eco de una línea con lo escrito y el enlace: `✅ Informar · Pedro - Cliente X: sesión 3 dada. · <enlace>`.
 
 ### HECHO
 
 1. Localiza la casilla por su texto en «Revisar» y «Siguientes pasos» de la reunión de trabajo. Si casan varias, el comando las lista; pregunta cuál con lista numerada.
-2. En **Revisar** se marca aquí **y** la de texto idéntico en la reunión anterior. En «Siguientes pasos», solo aquí. También se pueden marcar casillas de reuniones pasadas.
+2. En **Revisar** se marca aquí **y** su gemela de la reunión anterior (la línea de la que es copia). En «Siguientes pasos», solo aquí. También se pueden marcar casillas de reuniones pasadas.
 3. Si no se dice reunión y no está en la de hoy, mira los to-dos de la persona (`todos <persona>`): cada uno trae su reunión, y se marca ahí.
-4. Eco con las páginas tocadas: `✅ Hecho · Santi - … · marcada aquí y en la del 2026-11-05`. Si la gemela no aparece (texto cambiado), dilo; no la inventes.
+4. Eco con las páginas tocadas: `✅ Hecho · Santi - … · marcada aquí y en la del 2026-11-05`. Si el comando no nombra la reunión anterior, es que no había gemela: dilo; no la inventes.
 
 ### PENDIENTE (↓) · QUITAR · EDITAR
 
-Solo en la **reunión de trabajo** (la de hoy o una futura); en una pasada, dilo y ofrece hacerlo en Notion. El comando lo comprueba.
-- **↓**: la casilla pasa al final de «Siguientes pasos» de esta reunión, igual y con su Detalle, y sale de «Revisar». La anterior no se toca.
-- **Quitar**: archiva la línea (papelera de Notion, recuperable). Confirma antes si no es una línea que acabes de escribir tú.
+Solo en la **reunión de trabajo** (la de hoy o una futura); en una pasada, dilo. El comando lo comprueba.
+- **↓** (`pasar … --fecha F`): no está hecha y se vuelve a comprometer con **fecha nueva**; pregunta la fecha si no la dicen. La copia va a «Siguientes pasos» con la fecha y las veces que se ha pasado («↓n»); la de «Revisar» se queda como **pasada**, que es lo que cuenta el cumplimiento. La anterior no se toca.
+- **Aparcar** (`aparcar …`): no es para ya. La copia va a «Aparcados y mejoras», sin fecha; en «Revisar» se queda como **aparcada**.
+- **Fecha** (`fecha … F`): corrige el día de un paso de «Siguientes pasos» de la reunión de hoy. Lo que ya está en «Revisar» solo cambia de fecha con ↓.
+- **Quitar**: la línea va a la papelera (se puede recuperar desde la web, con «Deshacer», en el momento). Confirma antes si no es una línea que acabes de escribir tú.
 - **Editar**: corrige el texto (máximo 15 palabras); el Detalle se queda.
 
 ### ASIGNAR · VISTO
 
 Se pueden hacer en cualquier reunión, como marcar.
 - **Asignar**: cambia la persona de la línea. Sustituye su nombre («Pedro - …» o, en las Daily antiguas, «… - Pedro») por el de la otra persona. Si está en «Revisar», también cambia la gemela de la reunión anterior, para que sigan unidas. Eco: `✅ Ahora: Santi - … · <enlace>`.
-- **Visto**: marca un punto de Informar o Temas como ya tratado (en Notion, el bloque se pone en gris). Al recorrer la reunión, ve marcando lo hablado.
+- **Visto**: marca un punto de Informar o Temas como ya tratado. Al recorrer la reunión, ve marcando lo hablado.
 
 ### CONSULTAR
 
 - **«Qué tareas (to-dos) tengo / tiene X»**: `todos <persona>`.
-  - Son las casillas sin marcar con su nombre o alias en las reuniones de los últimos 14 días y en las próximas, de formato nuevo y también Daily/Weekly. Agrúpalas por reunión.
+  - Son las casillas sin marcar con su nombre o alias en las reuniones de los últimos 14 días y en las próximas. Agrúpalas por reunión.
   - Manda la copia más reciente (regla en `formato.md`).
-  - Sin el comando: consulta REST por rango de `Fecha` o, con el conector, `notion-fetch` de las reuniones de esas dos semanas. Di cuántas has revisado.
 - **«Qué quedó pendiente de la anterior»**: `leer <tipo>` y mira el «Revisar» de la de hoy, de todas las personas. Si hoy aún no hay reunión, los «Siguientes pasos» sin marcar de la anterior.
-- Salida: lista numerada `1. Santi - texto · Reunión de producto 2026-11-05 · <enlace>`, agrupada por reunión. Cierra con «¿Marco alguna como hecha? Dime los números.».
+- Salida: lista numerada `1. Santi - texto · para el 2026-11-18 · Reunión de producto 2026-11-05 · <enlace>`, agrupada por reunión, con la fecha (di cuáles están vencidas) y las veces pasada. Cierra con «¿Marco alguna como hecha? Dime los números.».
+- **«Cómo vamos de cumplimiento»**: `cumplimiento [--semanas N]`. De lo revisado en cada reunión, cuánto estaba hecho y cuánto se pasó a otro día o se aparcó: equipo, por persona y por semana. Cuenta desde el 15-nov-2026.
 
 ### TRANSCRIPCIÓN
 
 1. Con el comando y Plaud conectado: `plaud <tipo> [--dia D]` dice qué grabación es (la que empieza a la hora de la reunión, sacada del calendario), y su estado. `--md` saca la transcripción literal con hablantes y minuto. Si aún no está transcrita, la API oficial de Plaud no puede pedirlo: da el enlace (`--procesar` lo imprime) para que la persona pulse «Generar» en Plaud. Si Plaud no está conectado en esa máquina (`~/.plaud/tokens.json`), `npx -y @plaud-ai/cli@0.3.15 login` lo conecta entrando con Google (hola@6grados.es → «Autorizar»), o invoca la skill `6g-plaud` (por el navegador). `bin/plaud-conectar.mjs` es solo para reconectar la web. Si no está instalada, dilo (README) y ofrece que peguen la transcripción.
-2. **No pegues la transcripción en Notion.** Propón, en lista numerada, lo que saldría como líneas: Informar, Temas, Siguientes pasos, con persona y ≤15 palabras cada una.
+2. **No pegues la transcripción en la reunión.** Propón, en lista numerada, lo que saldría como líneas: Informar, Temas, Siguientes pasos, con persona y ≤15 palabras cada una.
 3. Atribuye solo lo que tenga hablante de seguridad alta. Lo dudoso va aparte, sin persona.
 4. Con los números que elijan, aplica AÑADIR.
 
-### Formato antiguo (Daily 6G y Weekly 6G de antes del 13-nov)
+### Reuniones sin formato
 
-Solo lectura, salvo FORMATEAR con ok: nada de moverlas ni reescribirlas. Escribir en una exige petición expresa («escríbelo en la Daily de hoy»): entonces añade solo esa línea al final, sin tocar el resto, y dilo. Si no, ofrece pasarlo a Producto o Redes.
+Una reunión que no tiene las secciones (por ejemplo, la «Daily Contenido» del 13-nov-2026, que vino de Notion tal cual) solo se lee, salvo FORMATEAR con ok. Así están casi todas las anteriores al 13-nov-2026, que vinieron de Notion.
 
 ## Reglas
 
-- **Nunca borres de reuniones pasadas.** Quitar, editar y ↓, solo en la reunión de trabajo; quitar = archivar (recuperable).
+- **Nunca borres de reuniones pasadas.** Quitar, editar y ↓, solo en la reunión de trabajo; quitar = a la papelera (recuperable).
 - **No inventes**: ni líneas, ni personas, ni estados. Lo que no esté claro, se pregunta (preguntas numeradas para contestar con un número).
-- **Di siempre qué escribiste y dónde**, con el enlace de la página.
+- **Di siempre qué escribiste y dónde**, con el enlace de la reunión.
 - Antes de escribir varias cosas a la vez, enseña el plan numerado y espera el ok.
-- Para probar algo, usa el tipo oculto `prueba` con fechas futuras (`crear prueba --dia 2027-01-04`) y archívalo al acabar (`archivar-pagina <id>`). Nunca pruebes sobre una reunión real.
-- Si Notion falla o no hay vía, solo lectura si se puede (nada de escritura) y avisa. Cambiar `tipos.json`, el formato o el código no es cosa de esta skill: se hace en el repo.
+- Para probar algo, usa el tipo oculto `prueba` con fechas futuras (`crear prueba --dia 2027-01-04`) y bórralo al acabar (`borrar-prueba <id>`). Nunca pruebes sobre una reunión real.
+- Si el comando falla o este ordenador no está conectado, no escribas nada y avisa. **Nunca escribas una reunión en Notion**: es solo archivo. Cambiar `tipos.json`, el formato o el código no es cosa de esta skill: se hace en el repo.

@@ -1,4 +1,16 @@
-# Cómo operar con Notion (reuniones)
+# Notion: solo archivo
+
+**Desde el 15-nov-2026 las reuniones NO viven en Notion.** Viven en la base propia de Reuniones (Supabase), y se leen y escriben con el comando `bin/reuniones.mjs` o con la web. Las páginas de la base «Reuniones de Equipo» de Notion se pasaron todas a la base propia (cuatro el 15-nov y el resto el 16-nov-2026). En Notion quedan como copia vieja, que ya no se actualiza.
+
+- **No escribas ninguna reunión en Notion**: ni con el conector, ni por REST. Nadie lo vería en la web.
+- Para **consultar** una reunión antigua no hace falta Notion: está en la base (`leer <id>` con el comando, o el Historial de la web).
+- Los ids de `tipos.json` → `notion` (data source, propiedades, personas) se conservan para eso y para el motor de reserva (`REUNIONES_MOTOR=notion`, ver el README del repo).
+
+Lo que sigue es la guía de cuando se operaba sobre Notion. Se conserva por si hay que volver atrás; **no la sigas para el trabajo normal**.
+
+---
+
+## (Antes) Cómo operar con Notion (reuniones)
 
 > **Si tienes el repo y `NOTION_TOKEN`, usa el comando `bin/reuniones.mjs`** (SKILL.md, paso 0): hace todo esto solo y con el mismo código que la web. Esta guía es para cuando solo hay el conector de Notion, o para entender qué hace el comando.
 
@@ -54,6 +66,16 @@ Con `notion-update-page` en su modo de **insertar contenido después de un texto
 - Si la línea pasa de 15 palabras (nombre incluido, el guion no cuenta), córtala como dice `formato.md` y pon lo que sobra, empezando por «…», como primera viñeta del Detalle.
 - Antes de insertar, comprueba que no hay ya una línea igual en esa sección. Si la sección solo tiene el hueco vacío de la plantilla, escribe en él en vez de añadir otra.
 - Después, `notion-fetch` y comprueba que la línea quedó dentro de su sección y que el toggle quedó anidado. Si no, corrige los tabuladores.
+
+## Fecha de un siguiente paso, pasar y aparcar (sin el comando)
+
+Reglas en `formato.md` → «Fecha de los siguientes pasos, pasar y cumplimiento». Con el comando sale solo; a mano:
+
+- **Añadir un paso:** la casilla termina en una **mención de fecha** de Notion: `- [ ] Santi - Revisar los niveles en la plataforma <mention-date start="2026-11-18"/>` (mira en el esquema del conector cómo se escribe la mención; por REST, un segmento `{"type":"mention","mention":{"type":"date","date":{"start":"2026-11-18"}}}` al final del `rich_text`). Sin fecha no se añade: pregunta para cuándo o va a «Aparcados y mejoras».
+- **Crear una reunión:** de lo pendiente de la anterior, a «Revisar» solo lo que vence el día de la reunión o antes (y lo que no tiene fecha); lo de fecha posterior va tal cual a «Siguientes pasos», con su fecha. Las casillas de «Revisar» marcadas y de color (pasadas o aparcadas) no se arrastran: su copia viva está en otra sección.
+- **↓ Pasar:** copia la línea al final de «Siguientes pasos» con la fecha nueva y ` ↓n` detrás (n = las veces que se ha pasado, una más que la que tuviera). La de «Revisar» **no se borra**: se marca (`[x]`) y se pone en **naranja** (por REST, `"to_do":{"checked":true,"color":"orange", …}` con su `rich_text`).
+- **Aparcar:** copia la línea, sin fecha, al final de «Aparcados y mejoras»; la de «Revisar» se marca y se pone en **azul** (`"color":"blue"`).
+- Al comparar textos (gemela de la reunión anterior, tareas de cada persona), la fecha y el «↓n» no cuentan.
 
 ## Marcar una casilla
 
