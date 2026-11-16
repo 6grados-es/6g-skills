@@ -31,6 +31,22 @@ Claude **no mete contraseñas ni códigos de verificación**, aunque se los den:
 - Si tienes Claude in Chrome, prefiérelo: la sesión queda guardada, las descargas van directas a `~/Downloads` y se pueden subir archivos con `file_upload`. El panel del navegador de la app sirve para leer, pero no sube ni guarda archivos.
 - Mientras tanto, sigue con lo que no dependa de Plaud.
 
+## Silencio antes de pinchar (obligatorio)
+
+En la transcripción de Plaud, **pinchar un turno** (el texto, la hora o al lado del nombre del hablante) salta a ese minuto y **arranca el audio**, y la persona lo oye por los altavoces del Mac. El reproductor es un `new Audio()` que no está en la página, así que `document.querySelectorAll('audio')` no lo encuentra y no sirve para pararlo. Pasó dos veces el 16-nov-2026.
+
+Por eso, **cada vez que cargues o recargues una página de `web.plaud.ai`, antes del primer clic**, ejecuta esto con la herramienta de JavaScript del navegador:
+
+```js
+HTMLMediaElement.prototype.play = function(){ this.muted = true; this.volume = 0; try{ this.pause() }catch(e){}; return Promise.resolve(); };
+const AC = window.AudioContext || window.webkitAudioContext; if (AC) AC.prototype.resume = () => Promise.resolve();
+```
+
+- No estorba al trabajo: leer la transcripción, renombrar hablantes y «Generar» funcionan igual (comprobado el 16-nov). Lo único que deja de ir es escuchar el audio, que no hace falta.
+- Se pierde al navegar o recargar: vuelve a ejecutarlo en cada página nueva de Plaud.
+- Si aun así suena, recarga la página (corta el audio) y vuelve a poner el silencio antes de pinchar.
+- Al terminar, sal de Plaud (navega a otra web) para no dejar el reproductor abierto.
+
 ## Encontrar la grabación
 
 - Abre cualquier grabación (`https://web.plaud.ai/file/<id>`): a la izquierda sale la lista con título, fecha `MM-DD HH:MM` y duración. Es una **lista virtual**: carga por trozos al desplazarla, así que `find` no ve lo que está lejos.
