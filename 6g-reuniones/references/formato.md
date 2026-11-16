@@ -62,7 +62,7 @@ Una casilla pasada o aparcada en Revisar no es una tarea hecha: es el rastro de 
 
 ## Plantilla de la Weekly (desde el 16-nov-2026)
 
-Casillas de inicio: Plaud grabando · Prework 5 min · Roles (por defecto «Pedro presenta · Santi temas · Pablo tareas»; se edita). Luego Celebración · Resumen de la semana (datos fijos con enlace: CRM, rocas, cumplimiento y vídeos, y arriba el % de to-dos y de temas por persona de la semana anterior) · Postmoto (Qué fue bien · Qué fue mal · Aprendizajes · Siguientes pasos) · **Nueva semana** (rocas de esta semana) · Revisar · Temas · Parking · Siguientes pasos · Aparcados. La Daily lleva Plaud, prework y roles; producto y redes, el prework.
+Casillas de inicio: Plaud grabando · Prework 5 min · Roles (por defecto «Pedro presenta · Santi temas · Pablo tareas»; se edita). Luego Celebración · Resumen de la semana (datos fijos con enlace: CRM, rocas, cumplimiento y vídeos, y arriba el % de to-dos y de temas por persona de la semana anterior) · Postmoto (Bien · Mal · Aprendizaje · Mejora; en la web, cada apartado con su propia línea para apuntar) · **Nueva semana** (rocas de esta semana) · Revisar · Temas · Parking · Siguientes pasos · Aparcados. La Daily lleva Plaud, prework y roles; producto y redes, el prework.
 
 ## Reuniones recurrentes
 
@@ -74,6 +74,7 @@ Al formatear una reunión, las líneas de **Revisar** se copian con su texto exa
 
 - Empieza por la persona: `Pedro - enunciado`. La persona es quien lo trae (informar, temas) o quien se compromete (siguientes pasos). Si la línea ya empieza por el nombre de otra persona («Santi - …»), se respeta; si lo lleva al final («Factura - Pedro»), al añadirla pasa delante («Pedro - Factura»). Lo ya escrito no se reescribe: las casillas se casan por texto.
 - **Sin límite de palabras** desde el 16-nov-2026 (Weekly: «quitar el límite de caracteres»). La línea entra entera; aun así, mejor una idea por línea y clara. El **Detalle** sigue: para datos o matices que no hacen falta en la línea. Las líneas viejas cortadas con «…» no se reescriben (se casan por texto).
+- Si la línea empieza por «Nombre - …» (nombre o alias del equipo), es de esa persona, diga lo que diga el selector.
 - En la web, cada persona tiene su icono delante del nombre (Santi 🧙, Pablo 🏎️, Pedro 🥷, María 👩‍🌾, Alejo 🐢; `icono` en `tipos.json`). El icono **nunca** va dentro del texto.
 - Líneas simples: sin negritas ni listas dentro de la línea.
 - No se repite una línea que ya está, igual, en su sección.
