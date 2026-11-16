@@ -117,6 +117,8 @@ Al formatear una reunión, las líneas de **Revisar** se copian con su texto exa
 - **Editar** corrige el texto (sin límite de palabras); el Detalle no se toca.
 - **Cambiar de persona**: se sustituye el nombre (o alias) que hay en la línea por el de la otra persona; si no hay ninguno, se pone «Nombre - » delante. En «Revisar», también en la gemela de la reunión anterior. La web lo hace con un desplegable en cada línea y en la lista de tareas.
 - **Visto** (Informar y Temas): el punto ya se ha tratado. El texto no cambia; en la web sale atenuado.
+- **Pasar un tema** (Temas, reunión de trabajo): no se ha tratado y va a Temas de la próxima reunión de su cadena, con «↓n». Aquí se queda atenuado como «→ próxima reunión» y no cuenta en el número de temas. Lo pidió Pedro en la reunión de producto del 16-nov: «Aquí no aparece el botón de pasar».
+- **To-do** (Temas): el tema se convierte en siguiente paso, con persona y fecha (Santi, mismo día: «debe haber un botón de convertir en todo»). Si no tenía persona, se elige al pasarlo.
 
 ## Tareas (to-dos) de una persona
 

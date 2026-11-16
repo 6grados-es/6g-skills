@@ -60,6 +60,8 @@ Lee `formato.md` antes de la primera escritura de la sesión.
 | «sube X del parking», «pasa X a temas», «aparca X» | MOVER | `mover-a daily "X" temas` (destinos: las secciones de esa reunión, salvo Revisar) |
 | «marca como hecho X», «ya está lo de X» | HECHO | `marcar producto "X"` (`--no` para desmarcar) |
 | «sigue pendiente X», «pásalo al jueves», «↓» | PENDIENTE (con fecha nueva; cuenta como pasada) | `pasar producto "X" --fecha jueves` |
+| «este tema para la próxima», «pasa el tema X», «no nos ha dado tiempo a X» (un TEMA) | PASAR TEMA (a Temas de la próxima reunión) | `pasar producto "X"` (sin `--fecha`; `--no` lo deshace) |
+| «convierte el tema X en to-do», «X lo hace Santi para el jueves» (un TEMA) | TO-DO (a Siguientes pasos, con persona y fecha) | `mover-a producto "X" pasos --fecha jueves --persona santi` |
 | «aparca X», «eso no es para ya» (una línea de Revisar o un paso) | APARCAR | `aparcar daily "X"` |
 | «cámbiale la fecha a X», «X es para el viernes» (paso de la reunión de hoy) | FECHA | `fecha daily "X" viernes` |
 | «cómo vamos de cumplimiento», «qué porcentaje cumplimos» | CUMPLIMIENTO | `cumplimiento [--semanas 4]` |
@@ -149,6 +151,8 @@ La web, en una reunión sin formato, enseña este camino y copia la petición pa
 Solo en la **reunión de trabajo** (la de hoy o una futura); en una pasada, dilo. El comando lo comprueba.
 - **↓** (`pasar … --fecha F`): no está hecha y se vuelve a comprometer con **fecha nueva**; pregunta la fecha si no la dicen. La copia va a «Siguientes pasos» con la fecha y las veces que se ha pasado («↓n»); la de «Revisar» se queda como **pasada**, que es lo que cuenta el cumplimiento. La anterior no se toca.
 - **Aparcar** (`aparcar …`): no es para ya. La copia va a «Aparcados y mejoras», sin fecha; en «Revisar» se queda como **aparcada**.
+- **Pasar un tema** (`pasar <reunión> "tema"`, sin fecha): no se ha tratado y va a **Temas de la próxima reunión** de su cadena, con «↓1» (las veces que se ha pasado). En esta se queda atenuado («→ próxima reunión»). Si la siguiente ya está creada, aparece en ella al momento. `--no` lo deshace. Los puntos fijos no se pasan: salen solos.
+- **Tema → to-do** (`mover-a <reunión> "tema" pasos --fecha F --persona P`): el tema pasa a «Siguientes pasos» con fecha y con esa persona delante. Si el tema ya lleva persona, `--persona` sobra.
 - **Fecha** (`fecha … F`): corrige el día de un paso de «Siguientes pasos» de la reunión de hoy. Lo que ya está en «Revisar» solo cambia de fecha con ↓.
 - **Quitar**: la línea va a la papelera (se puede recuperar desde la web, con «Deshacer», en el momento). Confirma antes si no es una línea que acabes de escribir tú.
 - **Editar**: corrige el texto (sin límite de palabras); el Detalle se queda.
