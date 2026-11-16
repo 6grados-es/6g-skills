@@ -41,7 +41,7 @@ Cada tipo tiene su **plantilla** (`plantilla` en `tipos.json`): qué secciones l
 
 Desde el 15-nov-2026 (lo pidieron Santi, Pablo y Pedro en la Daily del 13-nov: «si pone miércoles, miércoles está hecho», «que se pueda poner la fecha», «hasta que no se mida no se mejora»).
 
-- **Cada siguiente paso lleva fecha.** Sin fecha no se añade: o se dice para cuándo, o va a «Aparcados y mejoras». En Notion la fecha es una **mención de fecha** al final de la casilla (`Pedro - Oferta con el ranking @18 nov`), así que se ve y se puede cambiar también allí. No cuenta en las 15 palabras ni forma parte del texto.
+- **Cada siguiente paso lleva fecha.** Sin fecha no se añade: o se dice para cuándo, o va a «Aparcados y mejoras». En Notion la fecha es una **mención de fecha** al final de la casilla (`Pedro - Oferta con el ranking @18 nov`), así que se ve y se puede cambiar también allí. No forma parte del texto.
 - **Revisar = lo que vence ese día o antes.** Al crear la reunión, lo pendiente de la anterior se reparte: lo que vence el día de la reunión o antes (y lo que no tiene fecha) va a Revisar; lo de fecha posterior no se revisa todavía y pasa tal cual a Siguientes pasos, con su fecha. Un paso del miércoles no sale en Revisar el martes y sí el miércoles.
 - **Tres salidas en Revisar:**
   - **✓ Hecho**: como siempre (también marca la gemela de la reunión anterior).
@@ -57,7 +57,7 @@ Una casilla pasada o aparcada en Revisar no es una tarea hecha: es el rastro de 
 ## Revisar por fecha y lo de otro día
 
 - En Revisar sale primero lo de hoy, luego lo atrasado y lo que no tiene fecha.
-- Una línea sin fecha que dice el día en el texto («… - Martes», «18/11») toma ese día (el más cercano a la reunión, de 3 días antes a 3 después).
+- Una línea sin fecha que dice el día en el texto («… - Martes», «18/11») toma ese día (el más cercano a la reunión, de 3 días antes a 4 después: un lunes, «viernes» es el de esa semana).
 - Lo que es para **después** de la reunión sale aparte, «De otros días · solo para ver»: no se pasa ni se aparca y **no cuenta en el cumplimiento**.
 
 ## Plantilla de la Weekly (desde el 16-nov-2026)
