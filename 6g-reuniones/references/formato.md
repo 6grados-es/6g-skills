@@ -29,7 +29,7 @@ Cada tipo tiene su **plantilla** (`plantilla` en `tipos.json`): qué secciones l
 
 - **Daily:** Plaud grabando · Revisar · Temas (Puntos fijos: embudo, oferta, rocas · Temas nuevos) · Parking · Siguientes pasos · Aparcados y mejoras.
 - **Weekly:** Plaud grabando · Celebración · Resumen de la semana · Postmoto · y lo mismo que la Daily (más el punto fijo «Cuántos vídeos salieron»).
-- **Producto y redes:** las cuatro base y Parking.
+- **Daily de producto y redes:** las cuatro base y Parking.
 
 **Informar es opcional** (desde el 13-nov-2026): la Daily y la Weekly no la llevan, como la plantilla de Santi. Una página está en formato nuevo si tiene Revisar, Temas y Siguientes pasos.
 
@@ -66,7 +66,7 @@ Casillas de inicio: Plaud grabando · Prework 5 min · Roles (por defecto «Pedr
 
 ## Reuniones recurrentes
 
-Producto, redes, Daily y Weekly se crean solas (`recurrente` en `tipos.json`). Toca el día que hay evento de su tipo en el calendario de 6 Grados, a su hora. Producto, sin serie propia, va los días de Daily: a su hora si tiene evento o, si no, al acabar la Daily. Sin calendario, se usan los `dias` (1 = lunes) y la `hora` de `tipos.json`. Nunca se duplica: si alguien ya la creó, no se toca. Las crea una rutina del Mac de Pedro cada 30 min, de lunes a viernes, como red de seguridad: solo si a 1 h de empezar nadie la ha creado (`rutina.antes_min`), para no adelantarse a quien las crea siempre (el Claude de Santi, Pablo). Desde la skill o desde la web (apartado «Recurrentes») se pueden crear antes.
+Daily de producto, redes, Daily y Weekly se crean solas (`recurrente` en `tipos.json`). Toca el día que hay evento de su tipo en el calendario de 6 Grados, a su hora. La Daily de producto, sin serie propia, va los días de Daily: a su hora si tiene evento o, si no, al acabar la Daily. Sin calendario, se usan los `dias` (1 = lunes) y la `hora` de `tipos.json`. Nunca se duplica: si alguien ya la creó, no se toca. Las crea una rutina del Mac de Pedro cada 30 min, de lunes a viernes, como red de seguridad: solo si a 1 h de empezar nadie la ha creado (`rutina.antes_min`), para no adelantarse a quien las crea siempre (el Claude de Santi, Pablo). Desde la skill o desde la web (apartado «Recurrentes») se pueden crear antes.
 
 Al formatear una reunión, las líneas de **Revisar** se copian con su texto exacto (sin reformular, sin mover el nombre, sin cortar): se casan por texto con la reunión anterior y con las tareas de cada persona.
 

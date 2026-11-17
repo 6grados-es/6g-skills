@@ -20,9 +20,9 @@ Los ids (data source, personas) y los nombres de propiedades están en `tipos.js
 
 ## Buscar
 
-- `notion-search` con el título exacto (`Reunión de producto 2026-11-12`). Si la herramienta admite filtrar por data source, pásale `collection://<data_source>`; si no, comprueba el título en los resultados.
+- `notion-search` con el título exacto (`Daily de producto 2026-11-18`; las de antes del 18-nov se llaman `Reunión de producto …`). Si la herramienta admite filtrar por data source, pásale `collection://<data_source>`; si no, comprueba el título en los resultados.
 - Luego `notion-fetch` de la página (id o URL). Devuelve Markdown de Notion: casillas `- [ ]` / `- [x]`, numeradas `1.`, encabezados `# `, toggles `<details><summary>…</summary>…</details>`.
-- La búsqueda puede no listar todo. Para «la reunión anterior» busca por el prefijo del título (`Reunión de producto`), ordena por la fecha del título y confirma con `notion-fetch`.
+- La búsqueda puede no listar todo. Para «la reunión anterior» busca por el prefijo del título (`Daily de producto` y, para las antiguas, `Reunión de producto`), ordena por la fecha del título y confirma con `notion-fetch`.
 - Enlace de una página: `https://www.notion.so/<id sin guiones>`.
 
 ## Crear una reunión
@@ -41,7 +41,7 @@ Los ids (data source, personas) y los nombres de propiedades están en `tipos.js
 # Siguientes pasos
 ```
 
-Bajo «Revisar» van las casillas sin marcar de la anterior: las de sus «Siguientes pasos» y las de su «Revisar» que nadie resolvió, sin repetir textos y con su Detalle. Primera reunión del tipo: `- Sin tareas anteriores: es la primera reunión de producto.`
+Bajo «Revisar» van las casillas sin marcar de la anterior: las de sus «Siguientes pasos» y las de su «Revisar» que nadie resolvió, sin repetir textos y con su Detalle. Primera reunión del tipo: `- Sin tareas anteriores: es la primera daily de producto.`
 
 Con hora: `date:Fecha:start` = `AAAA-MM-DDTHH:MM:00`, `date:Fecha:end` = la hora más los `minutos` del tipo y zona `Europe/Madrid`. **Después**, espera 3 s, vuelve a leer la página y, si la automatización de la base ha puesto `Fecha` = hoy, vuelve a poner la buena (repítelo hasta que se quede).
 
@@ -105,7 +105,7 @@ Cabeceras: `Authorization: Bearer $NOTION_TOKEN`, `Notion-Version: 2025-09-03`, 
 ]},"sorts":[{"property":"Fecha","direction":"descending"}]}
 ```
 
-  Para una reunión concreta: `{"filter":{"property":"Nombre","title":{"equals":"Reunión de producto 2026-11-12"}}}`. Si `Archivado` no es casilla en el schema, quita ese filtro. Pagina con `next_cursor`.
+  Para una reunión concreta: `{"filter":{"property":"Nombre","title":{"equals":"Daily de producto 2026-11-18"}}}`. Si `Archivado` no es casilla en el schema, quita ese filtro. Pagina con `next_cursor`.
 - **Leer el cuerpo:** `GET /v1/blocks/<page_id>/children?page_size=100` (los hijos de un bloque, con su propio id). Las casillas son bloques `to_do` con `checked`.
 - **Marcar:** `PATCH /v1/blocks/<block_id>` con `{"to_do":{"checked":true}}`.
 - **Añadir después de un bloque:** `PATCH /v1/blocks/<page_id>/children` con `{"children":[…],"after":"<block_id>"}`.

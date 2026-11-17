@@ -1,17 +1,17 @@
 ---
 name: 6g-reuniones
 description: >-
-  El conector con Claude de las reuniones de equipo de 6 Grados (producto, redes, daily, weekly), que viven
+  El conector con Claude de las reuniones de equipo de 6 Grados (daily de producto, redes, daily, weekly), que viven
   en la base propia de Reuniones (la de la web Reuniones; desde el 15-nov-2026 ya no en Notion). Añade informar, temas y siguientes pasos a una reunión, marca
   casillas como hechas, pasa pendientes, quita o corrige líneas, crea la reunión del día con lo pendiente de la
   anterior, crea las reuniones recurrentes que falten, pasa al formato una reunión desordenada (propuesta y, con
   ok, la aplica), lista los to-dos de una persona, da el cumplimiento (hechos frente a pasados) y trae la
   transcripción de Plaud. Cada siguiente paso lleva fecha. Usa el mismo código y las
   mismas reglas que la web Reuniones (los botones): la fuente de verdad es esa base, no Notion. Invócala SIEMPRE que digan
-  «añade un tema a la reunión» (de producto o de redes), «añade un punto de informar», «apunta un siguiente
+  «añade un tema a la reunión» (a la daily de producto o a la de redes), «añade un punto de informar», «apunta un siguiente
   paso», «marca como hecho X», «pásalo al jueves», «apárcalo», «quita la línea X», «qué to-dos tengo», «qué
   to-dos tiene Santi», «cómo vamos de cumplimiento», «qué quedó
-  pendiente de la anterior», «crea la reunión de producto (o de redes, daily, weekly) de hoy», «crea las
+  pendiente de la anterior», «crea la daily de producto (o la de redes, la daily, la weekly) de hoy», «crea las
   reuniones de hoy», «qué reuniones recurrentes hay», «formatea la daily de hoy», «pon esta reunión en el
   formato», «la transcripción de la reunión X» o «/6g-reuniones».
 ---
@@ -49,7 +49,7 @@ Lee `formato.md` antes de la primera escritura de la sesión.
 
 | Dicen | Modo | Comando (desde la raíz del repo) |
 |---|---|---|
-| «crea la reunión de producto / de redes / la daily / la weekly (de hoy)» | CREAR | `crear producto [--dia D] [--hora HH:MM]` |
+| «crea la daily de producto / la de redes / la daily / la weekly (de hoy)» | CREAR | `crear producto [--dia D] [--hora HH:MM]` |
 | «crea las reuniones de hoy», «qué reuniones recurrentes hay», «se ha creado la de…» | RECURRENTES | `recurrentes [--dia D]` · `crear-recurrentes [--dia D] [--simular]` |
 | «formatea la daily de hoy», «ponla en el formato», «ordena esta reunión» | FORMATEAR | `formatear daily [--dia D]` y luego `formatear <id> --aplicar propuesta.json` |
 | «añade a informar…», «para informar: …» | AÑADIR → Informar | `anadir producto informar "…" --persona pedro [--detalle "…"]` |
@@ -77,7 +77,7 @@ Lee `formato.md` antes de la primera escritura de la sesión.
 
 ## Encontrar la reunión
 
-1. **Tipo.** Por `reconocer` de `tipos.json` («producto», «redes», «daily», «weekly»). Si no lo dicen, mira las de hoy (`hoy`) en las que está la persona: si hay una sola, esa; si hay varias, pregunta con lista numerada.
+1. **Tipo.** Por `reconocer` de `tipos.json` («producto», «redes», «daily», «weekly»). Solo hay dos nombres, daily o weekly: «la daily de producto» (o «la weekly de producto», o la antigua «reunión de producto») es `producto`, la de Pedro y Santi; «la daily» a secas es `daily` (Daily 6G). Si no lo dicen, mira las de hoy (`hoy`) en las que está la persona: si hay una sola, esa; si hay varias, pregunta con lista numerada.
 2. **Fecha.** La dicha (`--dia AAAA-MM-DD`); por defecto, hoy.
 3. **Si no existe:** el comando lo dice («No hay reunión de … el …»). Ofrece crearla (CREAR).
 4. **Reunión anterior** = la más reciente de su cadena con fecha anterior (la Daily y la Weekly se siguen la una a la otra). `leer` la nombra junto a «Revisar».
@@ -103,8 +103,8 @@ Desde el 13-nov-2026 todos los tipos nacen en formato nuevo, también la Daily 6
 
 ### RECURRENTES (las reuniones que se crean solas)
 
-Producto, redes, Daily y Weekly se crean solas (`recurrente` de cada tipo en `tipos.json`):
-- **Cuándo toca:** el día que hay evento de su tipo en el calendario de 6 Grados, a su hora. Producto no tiene serie propia: va los días de Daily, a su hora si tiene evento o al acabar la Daily. Sin calendario, los `dias` y la `hora` de `tipos.json`.
+Daily de producto, redes, Daily y Weekly se crean solas (`recurrente` de cada tipo en `tipos.json`):
+- **Cuándo toca:** el día que hay evento de su tipo en el calendario de 6 Grados, a su hora. La Daily de producto (`producto`) no tiene serie propia: va los días de Daily, a su hora si tiene evento o al acabar la Daily. Sin calendario, los `dias` y la `hora` de `tipos.json`.
 - **Quién las crea:** una rutina del Mac de Pedro (`sh bin/rutina-mac.sh instalar|estado|quitar`) que cada 30 min, de lunes a viernes, lanza `crear-recurrentes --rutina`. Es la red de seguridad: crea cada reunión solo si a 1 h de empezar nadie la ha creado (`rutina.antes_min`), para no adelantarse a quien las crea siempre (el Claude de Santi crea la Daily y la Weekly; Pablo, la de redes).
 - **Nunca duplica:** si ya existe (por fecha o por el día en el título), no la toca.
 - **Desde la skill:** `recurrentes` enseña las series y lo que toca hoy; `crear-recurrentes --simular` dice qué crearía; sin `--simular`, las crea. Confirma antes de crear si no lo han pedido así.
@@ -169,7 +169,7 @@ Se pueden hacer en cualquier reunión, como marcar.
   - Son las casillas sin marcar con su nombre o alias en las reuniones de los últimos 14 días y en las próximas. Agrúpalas por reunión.
   - Manda la copia más reciente (regla en `formato.md`).
 - **«Qué quedó pendiente de la anterior»**: `leer <tipo>` y mira el «Revisar» de la de hoy, de todas las personas. Si hoy aún no hay reunión, los «Siguientes pasos» sin marcar de la anterior.
-- Salida: lista numerada `1. Santi - texto · para el 2026-11-18 · Reunión de producto 2026-11-05 · <enlace>`, agrupada por reunión, con la fecha (di cuáles están vencidas) y las veces pasada. Cierra con «¿Marco alguna como hecha? Dime los números.».
+- Salida: lista numerada `1. Santi - texto · para el 2026-11-18 · Daily de producto 2026-11-18 · <enlace>`, agrupada por reunión, con la fecha (di cuáles están vencidas) y las veces pasada. Cierra con «¿Marco alguna como hecha? Dime los números.».
 - **«Cómo vamos de cumplimiento»**: `cumplimiento [--semanas N]`. De lo revisado en cada reunión, cuánto estaba hecho y cuánto se pasó a otro día o se aparcó: equipo, por persona y por semana. Cuenta desde el 15-nov-2026.
 
 ### TRANSCRIPCIÓN
