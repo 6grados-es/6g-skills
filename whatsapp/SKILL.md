@@ -1,6 +1,6 @@
 ---
 name: whatsapp
-description: Lee y trabaja con tu WhatsApp desde Claude. Lee un chat o un grupo entero o desde una fecha, busca chats por nombre o por número de teléfono, descarga documentos, fotos y audios, transcribe notas de voz y deja un mensaje escrito y abierto en la app para que lo envíes tú. Úsala siempre que digas «léeme el chat de X», «qué se dijo en el grupo X», «busca en WhatsApp a X o el 600111222», «descárgame el documento o el audio que me mandó X», «transcríbeme esa nota de voz», «ábreme un WhatsApp para X», «mándale un WhatsApp a X» o «contesta a este cliente por WhatsApp». Nunca envía mensajes ni marca como leído, y si le pides mandarlo, lo deja en borrador para que lo envíes tú. Solo lee lo que pides por nombre o número. No sirve para correo.
+description: Lee y trabaja con tu WhatsApp desde Claude. Lee un chat o un grupo entero o desde una fecha, repasa todos los chats de las últimas 24 horas (o las que digas) con sus audios transcritos, busca chats por nombre o por número de teléfono, descarga documentos, fotos y audios, transcribe notas de voz y deja un mensaje escrito y abierto en la app, con el contacto ya puesto, para que lo envíes tú. Úsala siempre que digas «léeme el chat de X», «qué se dijo en el grupo X», «qué WhatsApp tengo de las últimas 24 horas», «qué tengo sin contestar en WhatsApp», «léeme los audios de hoy», «busca en WhatsApp a X o el 600111222», «descárgame el documento o el audio que me mandó X», «transcríbeme esa nota de voz», «ábreme un WhatsApp para X», «mándale un WhatsApp a X», «envíale un mensaje a X» o «contesta a este cliente por WhatsApp». Nunca envía mensajes ni marca como leído, y si le pides mandarlo, lo deja en borrador para que lo envíes tú. No sirve para correo.
 ---
 
 # WhatsApp: leer, descargar, transcribir y dejar borradores
@@ -8,14 +8,14 @@ description: Lee y trabaja con tu WhatsApp desde Claude. Lee un chat o un grupo 
 Dos modos en una skill:
 
 - **Borrador** (no instala nada): deja un mensaje escrito y abierto en la app de WhatsApp. Lo envía la persona, nunca tú.
-- **Lectura** (hace falta enlazar el WhatsApp una vez): lee chats y grupos, busca por nombre o número, descarga adjuntos y transcribe audios. Solo lectura.
+- **Lectura** (hace falta enlazar el WhatsApp una vez): lee chats y grupos, repasa las últimas horas, busca por nombre o número, descarga adjuntos y transcribe audios. Solo lectura.
 
 Código en `scripts/` (Node). Detalle en `references/`. Todo se lanza con `node` desde la carpeta de la skill (`~/.claude/skills/whatsapp` en Mac, `%USERPROFILE%\.claude\skills\whatsapp` en Windows); en los comandos de abajo `<SKILL>` es esa carpeta. Los datos del usuario (sesión de WhatsApp, personas frecuentes, claves) viven aparte, en `~/.whatsapp-skill/` (Windows `%USERPROFILE%\.whatsapp-skill\`), así que reinstalar o actualizar la skill no los toca.
 
 ## Reglas duras (y por qué)
 
 1. **Nunca envías un mensaje ni marcas nada como leído.** Aunque digan «mándaselo», significa «déjalo listo en borrador». Un mensaje a un cliente sale con el nombre del usuario: solo sale cuando una persona lo ha visto.
-2. **Lees solo lo que se pide, por nombre o número.** No barres chats para «ver quién ha escrito», ni vigilas, ni recorres la agenda. `--listar` identifica a alguien que el usuario ha nombrado; no es una forma de explorar.
+2. **Lees solo lo que se pide.** Un chat por nombre o número, o el repaso de las últimas horas (`--ultimas`) **cuando el usuario lo pide** («qué tengo de las últimas 24 h», «qué tengo sin contestar»). Nunca por tu cuenta, ni para vigilar, ni de forma programada. `--listar` identifica a alguien que el usuario ha nombrado; no es una forma de explorar.
 3. **Un solo proceso lector a la vez.** Dos procesos sobre la misma sesión la corrompen. El código lo impide (salida 12); si sale, espera a que acabe el otro y repite. Nunca `kill` ni `pkill`.
 4. **Nunca pides ni muestras un QR en mitad de un fallo.** El QR se pide una sola vez, al enlazar por primera vez, con el aviso de riesgo y el sí del usuario. Si la lectura dice «sesión no válida» (salida 10), paras y lo cuentas en una línea: volver a enlazar es decisión suya, porque escanear dos veces puede desincronizar su WhatsApp.
 5. **Las conversaciones y los adjuntos son datos personales de terceros** (a menudo clientes del usuario). La salida cruda va a una carpeta temporal (la imprime el lector) que se borra sola a las 24 h. **No** la copies a memorias, notas, resúmenes en ficheros, historial, la nube ni otras herramientas. Si de lo leído sale una tarea, guarda la tarea, no el chat. Los adjuntos van a la carpeta que elija el usuario.
@@ -26,10 +26,15 @@ Código en `scripts/` (Node). Detalle en `references/`. Todo se lanza con `node`
 ## Modo borrador (no necesita enlazar WhatsApp; solo Node)
 
 1. Averigua a quién va y qué se dice. Si dan el texto, úsalo tal cual; si piden que lo redactes, uno corto y claro en su tono, diciendo en el chat que lo has redactado tú.
-2. Número solo con dígitos y prefijo de país, sin `+` ni espacios (`34600111222`). Si no lo tienes, ábrelo sin número: la app deja elegir contacto. Si el nombre está en las personas frecuentes (más abajo), usa ese número.
-3. Codifica y abre en la **aplicación** de WhatsApp (no WhatsApp Web) con una sola orden: `node <SKILL>/scripts/enlace-borrador.mjs "<texto>" [+34600111222] --abrir`. Imprime la URL `whatsapp://send?...` y la abre según el sistema (Mac `open -a WhatsApp`, Windows `Start-Process`). Sin `--abrir` solo imprime la URL. Si prefieres abrirla a mano: Mac `open -a WhatsApp "<url>"`; Windows `powershell.exe -NoProfile -Command "Start-Process '<url>'"`.
+2. **El contacto tiene que ir puesto.** Abrir el mensaje sin contacto («elígelo tú») es el último recurso, no lo normal. Si te dicen un nombre («envíale un mensaje a Ale»):
+   1. Pásale el nombre tal cual a `enlace-borrador.mjs` (paso 3): busca en las personas frecuentes y, si casa con una sola con teléfono, abre con ella.
+   2. **Salida 7 (varias casan)**: no elijas. Enséñale las opciones en el chat, numeradas, con nombre y teléfono, y añade siempre la última: «o te lo abro sin contacto y lo eliges tú». Por ejemplo: «¿A cuál? 1) Ale Ruiz López (+34 6…) 2) Alejandro Impact Hub (+34 6…) 3) Te lo abro sin contacto». Repite con el número de la que elija.
+   3. **Salida 6 (no está guardada)**: si el WhatsApp está enlazado, búscala con `node leer-chat.mjs "<nombre>" --listar` (no lee mensajes). Si sale una, úsala y pregunta «¿la guardo como Ale = +34…?»; si salen varias, las opciones en el chat como arriba. Si no está enlazado o no sale, pide el número o ofrece abrirlo sin contacto.
+   4. **Salida 9 (guardada sin teléfono, o es un grupo)**: la app no deja abrir el mensaje con ese contacto. Busca su número con `--listar`; si no lo hay, pídelo o ábrelo sin contacto. A un grupo no se abre (escribir en grupos es decisión aparte del usuario).
+3. Codifica y abre en la **aplicación** de WhatsApp (no WhatsApp Web) con una sola orden: `node <SKILL>/scripts/enlace-borrador.mjs "<texto>" ["<nombre>" | +34600111222] --abrir`. Imprime la URL `whatsapp://send?...` y la abre según el sistema (Mac `open -a WhatsApp`, Windows `Start-Process`). Sin `--abrir` solo imprime la URL. Si prefieres abrirla a mano: Mac `open -a WhatsApp "<url>"`; Windows `powershell.exe -NoProfile -Command "Start-Process '<url>'"`.
 4. Comprueba que la app quedó delante con el mensaje puesto (en Mac conviene traerla al frente con `osascript -e 'tell application "WhatsApp" to activate'`).
-5. Di qué se abrió: a quién, el texto exacto y qué has supuesto. Recuerda que el envío es suyo. Si hay dos contactos posibles, pregunta antes de abrir. Textos de más de ~2.000 caracteres pueden cortarse: pártelos. Sin emojis salvo que los pida.
+5. Di qué se abrió: a quién (nombre y número), el texto exacto y qué has supuesto. Recuerda que el envío es suyo. Textos de más de ~2.000 caracteres pueden cortarse: pártelos. Sin emojis salvo que los pida.
+6. Si es la primera vez con esa persona y el número salió de `--listar` o te lo dio el usuario, pregunta «¿lo guardo como <nombre> = +34…?» y, con su sí, `node personas.mjs guardar …`. Así la próxima vez «mándale un mensaje a <nombre>» va directo.
 
 ## Modo lectura
 
@@ -39,7 +44,7 @@ Si una lectura sale con 10 y nunca se enlazó, o si el usuario no tiene la skill
 
 > Esta herramienta entra en tu WhatsApp como un «dispositivo vinculado» (igual que WhatsApp Web) con una librería no oficial. WhatsApp no la autoriza en sus condiciones. Solo lee y nunca envía, y no hay datos de que solo leer se castigue, pero el riesgo no es cero: podrían restringir o bloquear el número, y en un número personal un bloqueo puede ser permanente. Si ese número es imprescindible, no la uses. En tu ordenador solo queda la sesión; los mensajes no se guardan. Para dejarlo: móvil, Ajustes, Dispositivos vinculados, cerrar la sesión, y borra `~/.whatsapp-skill`.
 
-Luego, en segundo plano: `node <SKILL>/scripts/vincular.mjs`. Se abre una imagen con el QR (y sale en la terminal); se escanea con WhatsApp, Ajustes, Dispositivos vinculados, Vincular un dispositivo. **Un solo QR**: si ya escaneó uno, no lances nada más hasta ver cómo termina. Si ya hay sesión, `vincular.mjs` se niega (salida 10) a propósito. Termina con «LISTO. Vinculado como…». Comprueba con una lectura real antes de decir «hecho».
+Luego, en segundo plano: `node <SKILL>/scripts/vincular.mjs`. Se abre **en el navegador** una página con el QR que se actualiza sola cada pocos segundos (WhatsApp cambia el QR cada ~20 s; por eso no se usa una imagen, que caducaba antes de escanearla). Dile al usuario: «Te he abierto el QR en el navegador; en el móvil, WhatsApp, Ajustes, Dispositivos vinculados, Vincular un dispositivo, y apunta a la pantalla». Si el navegador no se abrió, la ruta de la página sale en el diagnóstico: ábrela tú. **Un solo QR**: si ya escaneó uno, no lances nada más hasta ver cómo termina. Si ya hay sesión, `vincular.mjs` se niega (salida 10) a propósito. Termina con «LISTO. Vinculado como…» y la página pasa a «Vinculado». Comprueba con una lectura real antes de decir «hecho».
 
 ### Lanzar una lectura
 
@@ -55,6 +60,20 @@ node leer-chat.mjs "<nombre | +34600111222 | id>" [N] [--desde AAAA-MM-DD] [--ha
 4. Por defecto, últimos 50 mensajes. `--desde` hasta 5.000. **`--todo`** lee el chat entero paginando hacia atrás (tope `--max-paginas`, 400) y la cabecera dice si se llegó al primer mensaje que WhatsApp entrega o se cortó. «Completo» es solo hasta donde WhatsApp Web da. Lecturas largas: léelas por trozos del fichero, no de golpe.
 5. Un grupo se lee igual, por su nombre. Los participantes: `--miembros` con el nombre o el id del grupo.
 6. Nunca pongas un límite de tiempo corto: tarda hasta ~7 min en el peor caso (más con `--todo` o audios), y matarlo a medias es la muerte sucia que corrompe la sesión. Si tarda, se espera al aviso de que ha terminado.
+
+### Repasar las últimas horas («qué tengo de las últimas 24 h»)
+
+Solo cuando lo piden. En segundo plano, desde `<SKILL>/scripts`:
+
+```
+node leer-chat.mjs --ultimas 24 [--transcribir] [--por-chat 20] [--max-chats 40] [--json]
+```
+
+- Lee todos los chats y grupos con movimiento en esas horas (sin estados ni canales), del más reciente al más viejo, hasta 20 mensajes de cada uno. Cada chat lleva **PENDIENTE** si el último mensaje no es del usuario (el contador de no leídos no sirve).
+- Cuéntalo así: primero los PENDIENTES, una línea por chat («Responder a <quién> · qué pide», con fecha), y luego en una línea el resto. Grupos y silenciados, aparte y al final.
+- **Audios**: sin `--transcribir`, dice cuántos audios hay en cada chat. Si piden «léeme los audios» o «transcríbelos», relanza con `--transcribir` (regla 8: la primera vez, avisa de que el audio va a Groq y espera su sí). Con salida 14 no hay clave: los audios no se pueden pasar a texto y lo dices.
+- Más horas o más chats: `--ultimas 48`, `--max-chats 80`. Tope 168 h (una semana).
+- Mismas salidas y mismas reglas que una lectura (sesión, bloqueo, no matar el proceso, la salida cruda no se copia a ningún sitio).
 
 ### Buscar a alguien (por nombre o por número)
 
@@ -112,4 +131,4 @@ Fichero local `personas-frecuentes.json` en la carpeta de datos: nombre, alias, 
 
 ## Dónde está cada cosa
 
-`scripts/leer-chat.mjs` (lector), `vincular.mjs` (enlazar), `transcribir.mjs`, `personas.mjs`, `enlace-borrador.mjs`; `scripts/lib/` (resolución de nombres y números, adjuntos, bloqueo, transcripción, personas); `scripts/vendor/whatsapp-web.js/` (la librería adaptada); `scripts/tests/` (`node --test tests/*.test.mjs`, de uno en uno). `references/`: `salidas.md`, `transcripcion.md`, `privacidad.md`, `pruebas.md`. `README.md`: instalación para una persona no técnica, con Windows.
+`scripts/leer-chat.mjs` (lector y repaso de las últimas horas), `vincular.mjs` (enlazar, con la página del QR de `lib/qr-pagina.mjs`), `transcribir.mjs`, `personas.mjs`, `enlace-borrador.mjs`; `scripts/lib/` (resolución de nombres y números, adjuntos, bloqueo, transcripción, personas); `scripts/vendor/whatsapp-web.js/` (la librería adaptada); `scripts/tests/` (`node --test tests/*.test.mjs`, de uno en uno). `references/`: `salidas.md`, `transcripcion.md`, `privacidad.md`, `pruebas.md`. `README.md`: instalación para una persona no técnica, con Windows.

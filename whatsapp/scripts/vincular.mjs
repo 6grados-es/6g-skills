@@ -2,7 +2,8 @@
 /**
  * vincular.mjs — enlaza TU WhatsApp con la skill. Se hace UNA sola vez.
  *
- * Lo que hace: arranca la versión web de WhatsApp en un Chrome sin ventana, te enseña un código QR y, cuando lo
+ * Lo que hace: arranca la versión web de WhatsApp en un Chrome sin ventana, te abre en el NAVEGADOR una página con el
+ * código QR (se recarga sola cada pocos segundos, porque WhatsApp cambia el QR cada ~20 s) y, cuando lo
  * escaneas con el móvil (WhatsApp → Ajustes → Dispositivos vinculados → Vincular un dispositivo), deja la sesión
  * guardada en tu carpeta de datos (~/.whatsapp-skill/sesion; en Windows %USERPROFILE%\.whatsapp-skill\sesion).
  * Nada sale de tu ordenador. Para desvincular: en el móvil, Dispositivos vinculados → cerrar la sesión, y borra esa carpeta.
@@ -12,6 +13,7 @@
  *
  *   node vincular.mjs                      # vincula (enseña el QR y espera hasta 4 minutos)
  *   node vincular.mjs --solo-qr            # comprueba que el QR sale y termina, sin vincular nada
+ *   node vincular.mjs --no-abrir           # escribe la página del QR pero no abre el navegador (pruebas)
  *   node vincular.mjs --forzar-revincular  # vincula aunque haya una sesión guardada (la aparta primero)
  *
  * Códigos de salida:
@@ -29,12 +31,16 @@ import { existsSync, renameSync, rmSync } from 'fs';
 import { execFile } from 'child_process';
 import { tmpdir } from 'os';
 import { dirSesion, dirCacheWeb, asegurar } from './lib/rutas.mjs';
+import { escribirPagina } from './lib/qr-pagina.mjs';
 import { tomarBloqueo } from './lib/bloqueo.mjs';
 
 const { Client, LocalAuth } = pkg;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLIENT_ID = 'principal';                              // el lector usa el mismo
 const QR_PNG = join(process.env.WHATSAPP_SKILL_TMP || tmpdir(), 'whatsapp-skill-qr.png');
+const QR_HTML = join(process.env.WHATSAPP_SKILL_TMP || tmpdir(), 'whatsapp-skill-qr.html');
+const NO_ABRIR = process.argv.includes('--no-abrir');        // para pruebas: escribe la página pero no abre el navegador
+const pagina = (op) => { try { escribirPagina(QR_HTML, op); } catch (e) { err(`No pude escribir la página del QR: ${e.message}`); } };
 const ESPERA_QR_MS = parseInt(process.env.VINCULAR_ESPERA_QR_MS || String(4 * 60 * 1000), 10);
 const ESPERA_LISTO_MS = 2 * 60 * 1000;
 
@@ -87,8 +93,8 @@ async function cerrar(code) {
   process.exit(code);
 }
 
-/** Abre la imagen del QR con el visor del sistema: Mac `open`, Windows `explorer.exe`, Linux `xdg-open`. */
-function abrirImagen(ruta) {
+/** Abre la página del QR con el navegador por defecto: Mac `open`, Windows `explorer.exe`, Linux `xdg-open`. */
+function abrirEnNavegador(ruta) {
   const [cmd, args] = process.platform === 'darwin' ? ['open', [ruta]]
     : process.platform === 'win32' ? ['explorer.exe', [ruta]]     // explorer devuelve código 1 aunque funcione: se ignora
     : ['xdg-open', [ruta]];
@@ -100,6 +106,7 @@ let nQr = 0, abierto = false, autenticado = false, listo = false;
 const plazoQr = setTimeout(() => {
   if (autenticado) return;
   err('### No se escaneó ningún QR a tiempo. Vuelve a lanzarlo cuando tengas el móvil a mano.');
+  pagina({ estado: 'caducado' });
   cerrar(3);
 }, ESPERA_QR_MS);
 
@@ -107,14 +114,16 @@ client.on('qr', async (qr) => {
   nQr += 1;
   try { asegurar(dirname(QR_PNG)); await QRCode.toFile(QR_PNG, qr, { width: 640, margin: 2, errorCorrectionLevel: 'M' }); }
   catch (e) { err(`No pude guardar la imagen del QR: ${e.message}`); }
+  try { pagina({ estado: 'qr', n: nQr, dataUrl: await QRCode.toDataURL(qr, { width: 640, margin: 2, errorCorrectionLevel: 'M' }) }); }
+  catch (e) { err(`No pude preparar la página del QR: ${e.message}`); }
   err(`QR #${nQr}: escanéalo con el móvil (WhatsApp → Ajustes → Dispositivos vinculados → Vincular un dispositivo).`);
   qrTerminal.generate(qr, { small: true }, (q) => console.error(q));
   if (!abierto) {
     abierto = true;
-    err(`La imagen del QR está en: ${QR_PNG}`);
-    if (!SOLO_QR) {
-      const ok = await abrirImagen(QR_PNG);
-      err(ok ? '(se ha abierto la imagen; el QR se renueva solo cada ~20 s, vuelve a mirarla si caduca)' : '(no pude abrir la imagen; ábrela tú desde esa ruta)');
+    err(`La página del QR está en: ${QR_HTML} (y la imagen suelta, por si acaso, en ${QR_PNG})`);
+    if (!SOLO_QR && !NO_ABRIR) {
+      const ok = await abrirEnNavegador(QR_HTML);
+      err(ok ? '(abierta en el navegador; se actualiza sola cada pocos segundos, así que el QR que se ve nunca está caducado)' : '(no pude abrir el navegador; abre tú esa ruta con Chrome, Edge o Safari)');
     }
   }
   if (SOLO_QR) {
@@ -128,22 +137,24 @@ client.on('authenticated', () => {
   autenticado = true;
   clearTimeout(plazoQr);
   if (nQr === 0) err('Ya estabas vinculado: WhatsApp no ha pedido ningún QR. No hay nada que escanear.');
-  else err('QR escaneado. Terminando la vinculación: no cierres nada, puede tardar un minuto…');
+  else { err('QR escaneado. Terminando la vinculación: no cierres nada, puede tardar un minuto…'); pagina({ estado: 'escaneado' }); }
   // WhatsApp Web a veces no emite `ready` aunque la sesión ya esté guardada: no se cuelga para siempre.
   setTimeout(() => {
     if (listo) return;
     err('Vinculado: la sesión quedó guardada, aunque WhatsApp aún estaba sincronizando.');
+    pagina({ estado: 'listo', mensaje: 'La sesión quedó guardada.' });
     err('La primera lectura de un chat tardará algo más de lo normal. Comprueba en tu móvil → Ajustes → Dispositivos vinculados.');
     cerrar(0);
   }, ESPERA_LISTO_MS);
 });
-client.on('auth_failure', (m) => { err('### WhatsApp rechazó la sesión:', m); cerrar(2); });
+client.on('auth_failure', (m) => { err('### WhatsApp rechazó la sesión:', m); pagina({ estado: 'error', mensaje: 'WhatsApp rechazó la sesión.' }); cerrar(2); });
 
 client.once('ready', () => {
   listo = true;
   const me = client.info?.wid?.user ? `+${client.info.wid.user}` : '(número no disponible)';
   const nombre = client.info?.pushname ? ` (${client.info.pushname})` : '';
   err(`LISTO. Vinculado como ${me}${nombre}.`);
+  if (nQr) pagina({ estado: 'listo', mensaje: `Vinculado como ${me}${nombre}.` });
   err('Comprueba en tu móvil → Ajustes → Dispositivos vinculados: debe aparecer un dispositivo nuevo.');
   cerrar(0);
 });
@@ -157,5 +168,7 @@ client.initialize().catch((e) => {
     return cerrar(11);
   }
   err('### initialize:', m);
+  if (/Waiting failed|timeout/i.test(m)) err('### WhatsApp Web tardó demasiado en cargar (suele ser la conexión). Vuelve a lanzarlo; no se ha vinculado nada.');
+  pagina({ estado: 'error', mensaje: 'WhatsApp Web no llegó a cargar. Pídele a Claude que lo vuelva a lanzar.' });
   cerrar(1);
 });

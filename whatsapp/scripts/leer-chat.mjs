@@ -19,6 +19,11 @@
  *   node leer-chat.mjs <id@g.us> --miembros           # participantes de un grupo (nombre y teléfono si se ven)
  *   (--miembros también acepta el NOMBRE de un grupo)
  *
+ *   ÚLTIMAS HORAS (solo cuando el usuario lo pide; nunca para vigilar):
+ *   node leer-chat.mjs --ultimas 24                   # todos los chats con movimiento en las últimas 24 h
+ *   node leer-chat.mjs --ultimas 24 --transcribir     # además transcribe sus notas de voz y audios
+ *   node leer-chat.mjs --ultimas 12 --por-chat 30 --max-chats 60
+ *
  *   ADJUNTOS Y AUDIOS:
  *   node leer-chat.mjs "Marta" 80 --bajar                       # los 5 últimos DOCUMENTOS → carpeta Descargas
  *   node leer-chat.mjs "Marta" 80 --bajar --tipo image,video    # tipos: document image video audio ptt todo
@@ -71,6 +76,7 @@ import { dirSesion, dirCacheWeb, dirTemporal, asegurar } from './lib/rutas.mjs';
 import { tomarBloqueo } from './lib/bloqueo.mjs';
 import { cargar as cargarPersonas, buscar as buscarPersona, idDePersona, marcarUso, lineaPersonaNueva } from './lib/personas.mjs';
 import { configuracion, estadoConfiguracion, transcribirFichero, marca, ErrorTranscripcion } from './lib/transcribir.mjs';
+import { chatsRecientes, resumenChat, horasValidas } from './lib/barrido.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLIENT_ID = 'principal';
@@ -128,9 +134,9 @@ if (esPrincipal) {
 // ── Argumentos ────────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
 const flags = { json: false, stdout: false, bajar: false, listar: false, miembros: false, todo: false, transcribir: false, borrar: false };
-const val = { desde: null, hasta: null, tipo: null, fichero: '', salida: null, max: null, maxPaginas: null, idioma: null };
+const val = { desde: null, hasta: null, tipo: null, fichero: '', salida: null, max: null, maxPaginas: null, idioma: null, ultimas: null, porChat: null, maxChats: null };
 const pos = [];
-const CON_VALOR = { '--desde': 'desde', '--hasta': 'hasta', '--tipo': 'tipo', '--fichero': 'fichero', '--salida': 'salida', '--max': 'max', '--max-paginas': 'maxPaginas', '--idioma': 'idioma' };
+const CON_VALOR = { '--desde': 'desde', '--hasta': 'hasta', '--tipo': 'tipo', '--fichero': 'fichero', '--salida': 'salida', '--max': 'max', '--max-paginas': 'maxPaginas', '--idioma': 'idioma', '--ultimas': 'ultimas', '--por-chat': 'porChat', '--max-chats': 'maxChats' };
 const SIN_VALOR = { '--json': 'json', '--stdout': 'stdout', '--bajar': 'bajar', '--listar': 'listar', '--miembros': 'miembros', '--todo': 'todo', '--transcribir': 'transcribir', '--borrar-temporales': 'borrar' };
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
@@ -186,8 +192,20 @@ const fmt = (t) => new Date(t * 1000).toLocaleString('es-ES', fmtOpts);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const consulta = clasificarConsulta(pos[0] || process.env.ID || '');
-if (consulta.tipo === 'vacia' && !flags.listar) uso('Uso: node leer-chat.mjs "<nombre | teléfono | id>" [N] [--desde AAAA-MM-DD] [--hasta AAAA-MM-DD] [--todo] [--bajar] [--transcribir] [--json]');
-if (consulta.tipo === 'vacia') uso('--listar necesita un trozo de nombre o de teléfono');
+// ── Barrido de las últimas horas: no lleva nombre; se valida aparte ──────────
+const BARRIDO = val.ultimas != null;
+let HORAS = null, POR_CHAT = 20, MAX_CHATS = 40;
+if (BARRIDO) {
+  HORAS = horasValidas(val.ultimas);
+  if (!HORAS) uso(`--ultimas "${val.ultimas}" no vale: pon las horas (de 1 a 168), p. ej. --ultimas 24`);
+  if (pos.length || flags.listar || flags.miembros || flags.todo || flags.bajar || val.desde || val.hasta || val.tipo || val.fichero || val.salida) {
+    uso('--ultimas no lleva nombre ni se combina con --listar, --miembros, --todo, --desde, --hasta ni --bajar. Solo con --transcribir, --por-chat, --max-chats y --json.');
+  }
+  if (val.porChat != null) { POR_CHAT = parseInt(val.porChat, 10); if (!(POR_CHAT >= 1)) uso(`--por-chat "${val.porChat}" no es un número ≥ 1`); }
+  if (val.maxChats != null) { MAX_CHATS = parseInt(val.maxChats, 10); if (!(MAX_CHATS >= 1)) uso(`--max-chats "${val.maxChats}" no es un número ≥ 1`); }
+} else if (val.porChat != null || val.maxChats != null) uso('--por-chat y --max-chats solo valen con --ultimas.');
+if (consulta.tipo === 'vacia' && !flags.listar && !BARRIDO) uso('Uso: node leer-chat.mjs "<nombre | teléfono | id>" [N] [--desde AAAA-MM-DD] [--hasta AAAA-MM-DD] [--todo] [--bajar] [--transcribir] [--json]');
+if (consulta.tipo === 'vacia' && !BARRIDO) uso('--listar necesita un trozo de nombre o de teléfono');
 
 const fechaLocal = (txt, nombre, finDeDia) => {
   if (!txt) return null;
@@ -233,8 +251,8 @@ let N = flags.todo ? 0 : (pos[1] || process.env.N ? parseInt(pos[1] || process.e
 if (!flags.todo && !(N >= 1)) uso(`N "${pos[1]}" no es un número ≥ 1`);
 const ESPERA_MAX = parseInt(process.env.ESPERA_MAX || '240000', 10);
 const ESTABLE_MS = parseInt(process.env.ESTABLE_MS || '15000', 10);
-const SYNC_MAX = parseInt(process.env.SYNC_MAX_MS || (consulta.tipo === 'nombre' ? '150000' : '45000'), 10);
-const TIMEOUT_GLOBAL = parseInt(process.env.TIMEOUT_MS || String(ESPERA_MAX + 180000 + (flags.todo ? 25 * 60000 : 0) + (flags.transcribir ? 30 * 60000 : 0)), 10);
+const SYNC_MAX = parseInt(process.env.SYNC_MAX_MS || (consulta.tipo === 'nombre' || BARRIDO ? '150000' : '45000'), 10);
+const TIMEOUT_GLOBAL = parseInt(process.env.TIMEOUT_MS || String(ESPERA_MAX + 180000 + (flags.todo ? 25 * 60000 : 0) + (flags.transcribir ? 30 * 60000 : 0) + (BARRIDO ? 15 * 60000 : 0)), 10);
 
 // ── Antes de abrir nada: ¿hay sesión? ¿la usa otro? ───────────────────────────
 const PERSONAS = (() => { try { return cargarPersonas(); } catch (e) { err(`### ${e.message}`); return { personas: [] }; } })();
@@ -578,7 +596,93 @@ const guardadaComo = (c) => {
   return null;
 };
 
+// ── Barrido: todos los chats con movimiento en las últimas HORAS ─────────────
+async function barrido() {
+  const desdeT = Math.floor(Date.now() / 1000 - HORAS * 3600);
+  err(`### barrido de las últimas ${HORAS} h (desde ${fmt(desdeT)}); solo lectura`);
+  const est = await esperarSync(SYNC_MAX);
+  if (cerrando) return;
+  if (!est) { err('### la página nunca llegó a estado usable (socket CONNECTED + colecciones)'); return cerrar(4); }
+  let todos = null;
+  for (let i = 1; i <= 3 && !todos; i++) {
+    try {
+      todos = await client.pupPage.evaluate(() => {
+        const Col = window.require('WAWebCollections');
+        const r = [];
+        for (const c of Col.Chat.getModelsArray()) {
+          try {
+            const id = c.id?._serialized || c.id?.$1;
+            r.push({ id, nombre: c.formattedTitle || c.name || null, grupo: !!id && id.endsWith('@g.us'), t: c.t || 0,
+              archivado: !!c.archive, silenciado: !!(c.mute?.isMuted || c.muteExpiration > 0) });
+          } catch (e) { /* un chat roto no tumba el barrido */ }
+        }
+        return r;
+      });
+    } catch (e) { err(`### listar chats intento ${i} falló: ${e.message}`); await sleep(5000); }
+  }
+  if (!todos) { err('### no pude listar los chats de la sesión'); return cerrar(5); }
+  const recientes = chatsRecientes(todos, desdeT);
+  const elegidos = recientes.slice(0, MAX_CHATS);
+  const leidos = [];
+  for (const c of elegidos) {
+    let R = null;
+    for (let i = 1; i <= 2 && !R?.ok; i++) {
+      try { R = await leer(c.id, POR_CHAT, desdeT, null, 6); }
+      catch (e) { err(`### «${c.nombre || c.id}» intento ${i} falló: ${e.message}`); await sleep(5000); await esperarSync(90000); }
+    }
+    if (!R?.ok) { leidos.push({ ...c, ok: false, motivo: R?.motivo || 'no se pudo leer', mensajes: [] }); continue; }
+    leidos.push({ ...c, ok: true, numero: R.numero, mensajes: R.mensajes, recortado: R.truncadoPorTope });
+  }
+  let codigo = 0, motorTxt = null, avisoTxt = null;
+  if (flags.transcribir) {
+    for (const c of leidos) {
+      if (!c.mensajes.some((m) => m.tipo === 'ptt' || m.tipo === 'audio')) continue;
+      const b = await bajarAdjuntos(c.mensajes, { tipos: ['audio', 'ptt'], fichero: '', max: MAX_BAJAR, dir: join(DIR_RUN, 'audios') });
+      const t = await transcribirBajados(b);
+      motorTxt = `${t.motor}${t.modelo ? '/' + t.modelo : ''}`;
+      for (const m of c.mensajes) { const x = t.hechas.get(m.id); if (x) m.transcripcion = x.texto; }
+      c.fallosAudio = [...b.fallidos.map((x) => `no se pudo bajar «${x.fichero}»: ${x.motivo}`), ...t.fallidas.map((x) => `«${x.fichero}»: ${x.motivo}`)];
+      if (t.codigo) { codigo = codigo || t.codigo; avisoTxt = t.aviso || avisoTxt; }
+      if (t.codigo === 14 || (t.codigo === 15 && t.aviso)) break;   // sin clave o clave rechazada: no sigue probando chat a chat
+    }
+    // transcribirBajados avisa de la nube una vez por chat: basta con una línea.
+    const avisos = lineasSalida.filter((l) => l.startsWith('=== AUDIO ENVIADO A'));
+    lineasSalida.length = 0;
+    if (avisos.length) out(avisos[0]);
+  }
+  const resumen = leidos.map((c) => ({ ...c, ...resumenChat(c.mensajes) }));
+  const pendientes = resumen.filter((c) => c.pendiente).length;
+  const audios = resumen.reduce((n, c) => n + c.audios, 0);
+  if (flags.json) {
+    lineasSalida.length = 0;
+    out(JSON.stringify({ ok: true, horas: HORAS, desde: desdeT, chatsConMovimiento: recientes.length, leidos: resumen.length,
+      recortadoPorMaxChats: recientes.length > elegidos.length, pendientes, audios, transcripcion: motorTxt, avisoTranscripcion: avisoTxt,
+      chats: resumen, sincronizacion: sincro(est) }, null, 2));
+  } else {
+    out(`\n=== ÚLTIMAS ${HORAS} H (desde ${fmt(desdeT)}): ${recientes.length} chats con movimiento${recientes.length > elegidos.length ? ` — leo los ${elegidos.length} más recientes (--max-chats para más)` : ''} · ${pendientes} PENDIENTES · ${audios} audios ===`);
+    out('=== PENDIENTE = el último mensaje no es tuyo. Hasta ' + POR_CHAT + ' mensajes por chat (--por-chat). ===\n');
+    resumen.forEach((c, i) => {
+      const marcas = [c.grupo ? 'GRUPO' : null, c.archivado ? 'archivado' : null, c.silenciado ? 'silenciado' : null].filter(Boolean).join(', ');
+      out(`--- ${i + 1}. ${c.nombre || '(sin nombre)'} — ${c.id}${c.numero ? ` — nº ${c.numero}` : ''}${marcas ? ` [${marcas}]` : ''} — ${c.total} mensajes${c.recortado ? ' (recortado)' : ''}${c.audios ? ` · ${c.audios} audio(s)${c.transcritos ? `, ${c.transcritos} transcrito(s)` : ''}` : ''} — ${c.pendiente ? 'PENDIENTE' : 'contestado'} ---`);
+      if (!c.ok) out(`  (no se pudo leer: ${c.motivo})`);
+      for (const m of c.mensajes) {
+        const dur = m.duracion ? ` ${marca(m.duracion)}` : '';
+        const media = m.media ? ` [${m.tipo.toUpperCase()}${dur}${m.fichero ? ': ' + m.fichero : ''}]` : '';
+        const texto = m.transcripcion ? `(transcrito) ${m.transcripcion.replace(/\n/g, ' ')}` : m.texto.replace(/\n/g, ' ⏎ ');
+        out(`[${fmt(m.t)}] ${m.autor}:${media} ${texto}`);
+      }
+      for (const f of c.fallosAudio || []) out(`  ✗ ${f}`);
+      out('');
+    });
+    if (audios && !flags.transcribir) out(`=== ${audios} audio(s) SIN TEXTO. Para pasarlos a texto: node leer-chat.mjs --ultimas ${HORAS} --transcribir (o un chat suelto con --transcribir) ===`);
+    if (flags.transcribir) out(`=== TRANSCRIPCIÓN${motorTxt ? ` (${motorTxt})` : ''}: ${resumen.reduce((n, c) => n + c.transcritos, 0)} de ${audios} audio(s)${avisoTxt ? ` — ${avisoTxt}` : ''} ===`);
+    out(`${lineaSincro(est)}\n`);
+  }
+  await cerrar(codigo);
+}
+
 async function main() {
+  if (BARRIDO) return barrido();
   const objetivo = consulta.nombre || consulta.telefono || consulta.cifras || consulta.id;
   if (flags.listar) err(`### listando los chats que casan con «${objetivo}» (no se lee ningún mensaje)`);
   else if (flags.miembros) err(`### consultando miembros de «${objetivo}» (sin mensajes)`);

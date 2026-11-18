@@ -4,7 +4,19 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const cli = fileURLToPath(new URL('../enlace-borrador.mjs', import.meta.url));
-const run = (...a) => spawnSync(process.execPath, [cli, ...a], { encoding: 'utf8' });
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+
+// Carpeta de datos de prueba: nunca la del usuario.
+const HOME = mkdtempSync(join(tmpdir(), 'wa-borrador-'));
+writeFileSync(join(HOME, 'personas-frecuentes.json'), JSON.stringify({ version: 1, personas: [
+  { nombre: 'Marta Pruebas', alias: ['Mar'], telefono: '34600000002', id: '34600000002@c.us' },
+  { nombre: 'Luis Uno', telefono: '34600000003', id: '34600000003@c.us' },
+  { nombre: 'Luis Dos', telefono: '34600000004', id: '34600000004@c.us' },
+  { nombre: 'Sin Numero', id: '111111111111111@lid' },
+] }));
+const run = (...a) => spawnSync(process.execPath, [cli, ...a], { encoding: 'utf8', env: { ...process.env, WHATSAPP_SKILL_HOME: HOME } });
 
 test('el enlace lleva el teléfono normalizado y el texto codificado (tildes, saltos de línea, + y :)', () => {
   const r = run('Hola, ¿qué tal?\nA las 10:00 + café', '+34 600 000 001');
@@ -17,6 +29,30 @@ test('sin teléfono, la app deja elegir el contacto', () => {
 });
 
 test('un teléfono raro o la falta de texto salen con 2 y no abren nada', () => {
-  assert.equal(run('Hola', 'abc').status, 2);
+  assert.equal(run('Hola', '12').status, 2);
   assert.equal(run().status, 2);
+});
+
+test('por NOMBRE: una sola persona guardada → su teléfono', () => {
+  const r = run('Hola', 'Marta');
+  assert.equal(r.status, 0);
+  assert.equal(r.stdout.trim(), 'whatsapp://send?phone=34600000002&text=Hola');
+  assert.equal(run('Hola', 'mar').stdout.trim(), 'whatsapp://send?phone=34600000002&text=Hola');
+});
+
+test('por NOMBRE: varias casan → 7 con la lista y sin URL', () => {
+  const r = run('Hola', 'Luis');
+  assert.equal(r.status, 7);
+  assert.match(r.stdout, /1\. Luis Uno — \+34600000003/);
+  assert.match(r.stdout, /2\. Luis Dos — \+34600000004/);
+  assert.doesNotMatch(r.stdout, /whatsapp:\/\//);
+});
+
+test('por NOMBRE: nadie → 6; guardada sin teléfono → 9; ninguna abre nada', () => {
+  const r6 = run('Hola', 'Pepa');
+  assert.equal(r6.status, 6);
+  assert.doesNotMatch(r6.stdout, /whatsapp:\/\//);
+  const r9 = run('Hola', 'Sin Numero');
+  assert.equal(r9.status, 9);
+  assert.doesNotMatch(r9.stdout, /whatsapp:\/\//);
 });
