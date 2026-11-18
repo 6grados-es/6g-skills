@@ -19,3 +19,5 @@ NO probado contra WhatsApp real ni en Windows (no se podía sin arriesgar una cu
 - Un chat con el WhatsApp Web cambiando: la librería no oficial se rompe de vez en cuando cuando WhatsApp cambia su web.
 
 Cuando se pruebe en el primer ordenador con Windows, lo primero: `node instalar.mjs --comprobar`, luego `node vincular.mjs --solo-qr` y, con su sí, la vinculación real.
+
+- 2.2.0 (18-nov-2026): el plan B de Chrome (`arreglar-chrome.mjs`) se probó de verdad en Mac (Apple Silicon) en una caché aparte: baja, descomprime con `ditto` y Chrome arranca. En Windows solo con pruebas simuladas (`tests/chrome-manual.test.mjs`: tar, y si falla Expand-Archive): falta probarlo en un Windows real. La detección de la app de escritorio (registro `HKCR\whatsapp` o paquete de la Store) tampoco se ha probado en un Windows real.

@@ -7,7 +7,7 @@ El lector (`leer-chat.mjs`) imprime `CODIGO: n` y lo deja también en `codigo.tx
 | 0 | Hecho | Lo leído, con cabecera y citas. |
 | 2 | Error de uso | Nada; se corrige la orden. No se abrió ninguna sesión. |
 | 3 | Timeout global | Un reintento tras esperar. Si repite, salida barata. |
-| 4 | La página de WhatsApp Web nunca quedó usable | Un reintento. Puede ser red lenta o que WhatsApp Web esté cambiando. |
+| 4 | La página de WhatsApp Web nunca quedó usable | Lo que más pasa: el usuario tiene WhatsApp Web abierto en su navegador a la vez (pídele que lo cierre) o la cuenta se acaba de enlazar y aún sincroniza contactos (que espere unos minutos). Después, un reintento. También puede ser red lenta o que WhatsApp Web esté cambiando. |
 | 5 | No se pudo leer el chat | Un reintento. Si repite, salida barata. |
 | 6 | Chat no encontrado | «No he encontrado a X entre N chats; la sincronización estaba (completa / a medias).» Con a medias no se dice «no existe». |
 | 7 | Varios chats (o varias personas guardadas) casan | Lista y pregunta cuál, con tu recomendación. Nunca se elige solo. |

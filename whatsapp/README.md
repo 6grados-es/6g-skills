@@ -81,6 +81,12 @@ Para pasar audios a texto la skill usa Whisper en **Groq** con una clave tuya (g
 
 `SKILL.md` es lo que lee Claude. Código en `scripts/`; tests con `node --test tests/<fichero>.test.mjs` (de uno en uno). `references/pruebas.md` dice qué está probado y qué no. La librería va copiada y adaptada en `scripts/vendor/` (ver su `NOTICE-6grados.md`).
 
+### Qué cambia en la 2.2.0
+
+- El mensaje que te deja escrito se abre donde tú usas WhatsApp: en la aplicación de escritorio si la tienes y, si no, en WhatsApp Web en tu navegador. Se puede forzar con `--en app` o `--en web`.
+- Instalación en Windows: si el Chrome para WhatsApp Web se queda a medias al descomprimir, el instalador lo baja otra vez y lo descomprime con la herramienta del propio Windows (`node arreglar-chrome.mjs` lo hace a mano).
+- Si una lectura no arranca (salida 4), te dice lo que suele ser: WhatsApp Web abierto a la vez en tu navegador, o una cuenta recién enlazada que aún sincroniza.
+
 ### Qué cambia en la 2.1.1
 
 - Arreglo: tras unos cuantos usos, la lectura dejaba de arrancar («Waiting failed», WhatsApp «abierto en otra ventana»). Chrome reabría todas las pestañas de WhatsApp de los usos anteriores. Ahora se limpian antes de cada arranque, sin tocar la sesión.

@@ -604,7 +604,7 @@ async function barrido() {
   err(`### barrido de las últimas ${HORAS} h (desde ${fmt(desdeT)}); solo lectura`);
   const est = await esperarSync(SYNC_MAX);
   if (cerrando) return;
-  if (!est) { err('### la página nunca llegó a estado usable (socket CONNECTED + colecciones)'); return cerrar(4); }
+  if (!est) { err('### la página nunca llegó a estado usable (socket CONNECTED + colecciones)'); err('### Lo más probable: WhatsApp Web está abierto en tu navegador a la vez (ciérralo) o la cuenta se acaba de enlazar y aún sincroniza (espera unos minutos). Luego, un reintento.'); return cerrar(4); }
   let todos = null;
   for (let i = 1; i <= 3 && !todos; i++) {
     try {
@@ -710,7 +710,7 @@ async function main() {
 
   const est = await esperarSync(SYNC_MAX);
   if (cerrando) return;
-  if (!est) { err('### la página nunca llegó a estado usable (socket CONNECTED + colecciones)'); return cerrar(4); }
+  if (!est) { err('### la página nunca llegó a estado usable (socket CONNECTED + colecciones)'); err('### Lo más probable: WhatsApp Web está abierto en tu navegador a la vez (ciérralo) o la cuenta se acaba de enlazar y aún sincroniza (espera unos minutos). Luego, un reintento.'); return cerrar(4); }
 
   // 1) ¿Qué chat? Un nombre o un trozo de teléfono se resuelve aquí, dentro de la misma sesión abierta.
   const porNombre = consulta.nombre && !desdePersonas;

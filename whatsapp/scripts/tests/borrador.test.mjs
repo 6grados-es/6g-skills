@@ -16,7 +16,7 @@ writeFileSync(join(HOME, 'personas-frecuentes.json'), JSON.stringify({ version: 
   { nombre: 'Luis Dos', telefono: '34600000004', id: '34600000004@c.us' },
   { nombre: 'Sin Numero', id: '111111111111111@lid' },
 ] }));
-const run = (...a) => spawnSync(process.execPath, [cli, ...a], { encoding: 'utf8', env: { ...process.env, WHATSAPP_SKILL_HOME: HOME } });
+const run = (...a) => spawnSync(process.execPath, [cli, ...a], { encoding: 'utf8', env: { ...process.env, WHATSAPP_SKILL_HOME: HOME, WHATSAPP_BORRADOR: 'app' } });
 
 test('el enlace lleva el teléfono normalizado y el texto codificado (tildes, saltos de línea, + y :)', () => {
   const r = run('Hola, ¿qué tal?\nA las 10:00 + café', '+34 600 000 001');
@@ -55,4 +55,39 @@ test('por NOMBRE: nadie → 6; guardada sin teléfono → 9; ninguna abre nada',
   const r9 = run('Hola', 'Sin Numero');
   assert.equal(r9.status, 9);
   assert.doesNotMatch(r9.stdout, /whatsapp:\/\//);
+});
+
+// ── App de escritorio o WhatsApp Web ─────────────────────────────────────────────────────────────
+import { dondeAbrir, hayAppEscritorio, urlBorrador, ordenAbrir } from '../lib/donde-abrir.mjs';
+
+test('--en web deja el borrador en WhatsApp Web, con el mismo teléfono y texto', () => {
+  const r = run('Hola, ¿qué tal?', '600000001', '--en', 'web');
+  assert.equal(r.status, 0);
+  assert.equal(r.stdout.trim(), 'https://web.whatsapp.com/send?phone=34600000001&text=Hola%2C%20%C2%BFqu%C3%A9%20tal%3F');
+  assert.match(r.stderr, /WhatsApp Web/);
+  assert.equal(run('Hola', '--en', 'movil').status, 2);
+});
+
+test('sin app de escritorio se elige la web; con app, la app; lo pedido manda', () => {
+  const sinApp = { plataforma: 'darwin', existe: () => false, ejecutar: () => ({ status: 1 }) };
+  const conApp = { plataforma: 'darwin', existe: (r) => r === '/Applications/WhatsApp.app', ejecutar: () => ({ status: 1 }) };
+  assert.equal(dondeAbrir('', sinApp), 'web');
+  assert.equal(dondeAbrir('', conApp), 'app');
+  assert.equal(dondeAbrir('app', sinApp), 'app');
+  assert.equal(dondeAbrir('WEB', conApp), 'web');
+});
+
+test('Windows: el protocolo whatsapp: registrado (o el paquete de la Store) cuenta como app', () => {
+  const reg = { plataforma: 'win32', ejecutar: (c) => ({ status: c === 'reg' ? 0 : 1, stdout: '' }) };
+  const store = { plataforma: 'win32', ejecutar: (c) => (c === 'reg' ? { status: 1 } : { status: 0, stdout: 'si\r\n' }) };
+  const nada = { plataforma: 'win32', ejecutar: (c) => (c === 'reg' ? { status: 1 } : { status: 0, stdout: '' }) };
+  assert.equal(hayAppEscritorio(reg), true);
+  assert.equal(hayAppEscritorio(store), true);
+  assert.equal(hayAppEscritorio(nada), false);
+});
+
+test('la orden para abrir: la app por su nombre en Mac, la web en el navegador', () => {
+  assert.deepEqual(ordenAbrir('app', 'whatsapp://send?text=a', 'darwin'), ['open', ['-a', 'WhatsApp', 'whatsapp://send?text=a']]);
+  assert.deepEqual(ordenAbrir('web', urlBorrador('web', 'a'), 'darwin'), ['open', ['https://web.whatsapp.com/send?text=a']]);
+  assert.equal(ordenAbrir('web', "https://x/?t=it's", 'win32')[1][2], "Start-Process 'https://x/?t=it''s'");
 });

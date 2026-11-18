@@ -73,11 +73,18 @@ else {
   const chrome = () => spawnSync(process.execPath, ['--input-type=module', '-e',
     "import p from 'puppeteer'; import { existsSync } from 'fs'; process.exit(existsSync(p.executablePath()) ? 0 : 1)"], { cwd: SCRIPTS });
   if (chrome().status === 0) ok('Chrome de WhatsApp Web presente');
-  else if (SOLO_COMPROBAR) { mal('falta el Chrome de WhatsApp Web: lanza `npx puppeteer browsers install chrome` en la carpeta scripts'); hayError = true; }
+  else if (SOLO_COMPROBAR) { mal('falta el Chrome de WhatsApp Web: repite `node instalar.mjs` (lo baja y, si queda a medias, lo descomprime con el sistema) o lanza `node arreglar-chrome.mjs` en la carpeta scripts'); hayError = true; }
   else {
     linea('  Falta el Chrome de WhatsApp Web: lo descargo (unos 150 MB)…');
     spawnSync(WIN ? 'npx.cmd' : 'npx', ['puppeteer', 'browsers', 'install', 'chrome'], { cwd: SCRIPTS, stdio: 'inherit', shell: WIN });
-    if (chrome().status === 0) ok('Chrome de WhatsApp Web instalado'); else { mal('no pude instalar el Chrome'); hayError = true; }
+    if (chrome().status === 0) ok('Chrome de WhatsApp Web instalado');
+    else {
+      // Plan B (pasó en Windows): el zip baja entero pero la descompresión de puppeteer se corta a medias.
+      linea('  El Chrome ha quedado a medias: lo bajo otra vez y lo descomprimo con la herramienta del sistema…');
+      spawnSync(process.execPath, [join(SCRIPTS, 'arreglar-chrome.mjs')], { cwd: SCRIPTS, stdio: 'inherit' });
+      if (chrome().status === 0) ok('Chrome de WhatsApp Web instalado (descomprimido con el sistema)');
+      else { mal('no pude instalar el Chrome. Prueba `node arreglar-chrome.mjs` en la carpeta scripts y, si sigue, mira el antivirus'); hayError = true; }
+    }
   }
 }
 
