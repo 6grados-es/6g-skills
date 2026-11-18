@@ -74,6 +74,7 @@ import { clasificarConsulta, coincidir, coincidirNumero, lineasListado } from '.
 import { parsearTipos, elegirAdjuntos, nombreSeguro, rutaLibre, tamanoLegible, MAX_POR_DEFECTO } from './lib/adjuntos.mjs';
 import { dirSesion, dirCacheWeb, dirTemporal, asegurar } from './lib/rutas.mjs';
 import { tomarBloqueo } from './lib/bloqueo.mjs';
+import { limpiarPestanasRestauradas } from './lib/perfil.mjs';
 import { cargar as cargarPersonas, buscar as buscarPersona, idDePersona, marcarUso, lineaPersonaNueva } from './lib/personas.mjs';
 import { configuracion, estadoConfiguracion, transcribirFichero, marca, ErrorTranscripcion } from './lib/transcribir.mjs';
 import { chatsRecientes, resumenChat, horasValidas } from './lib/barrido.mjs';
@@ -275,6 +276,7 @@ process.on('uncaughtException', (e) => err('[guarda] uncaughtException tragado:'
 
 const { default: pkg } = await import('whatsapp-web.js');
 const { Client, LocalAuth } = pkg;
+try { limpiarPestanasRestauradas(SESION_CARPETA); } catch (e) { err(`[perfil] no pude limpiar las pestañas guardadas: ${e.message}`); }
 const client = new Client({
   authStrategy: new LocalAuth({ clientId: CLIENT_ID, dataPath: dirSesion() }),
   webVersionCache: { type: 'local', path: dirCacheWeb() },

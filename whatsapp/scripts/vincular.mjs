@@ -33,6 +33,7 @@ import { tmpdir } from 'os';
 import { dirSesion, dirCacheWeb, asegurar } from './lib/rutas.mjs';
 import { escribirPagina } from './lib/qr-pagina.mjs';
 import { tomarBloqueo } from './lib/bloqueo.mjs';
+import { limpiarPestanasRestauradas } from './lib/perfil.mjs';
 
 const { Client, LocalAuth } = pkg;
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -70,6 +71,7 @@ if (!bloqueo.ok) {
 process.on('unhandledRejection', (e) => err('[guarda] unhandledRejection tragado:', e?.message || e));
 process.on('uncaughtException', (e) => err('[guarda] uncaughtException tragado:', e?.message || e));
 
+try { limpiarPestanasRestauradas(SESION); } catch (e) { err(`[perfil] no pude limpiar las pestañas guardadas: ${e.message}`); }
 const client = new Client({
   authStrategy: new LocalAuth({ clientId: CLIENT_ID, dataPath: dirSesion() }),
   webVersionCache: { type: 'local', path: dirCacheWeb() },
