@@ -3,7 +3,10 @@
 // mismo desfase de tiempos, misma rotación de claves ante un 429 y misma reparación de segmentos sin tildes.
 //
 // MOTOR (variable TRANSCRIBIR_MOTOR):
-//   groq        (por defecto) Whisper en Groq con TU clave: GROQ_API_KEY (varias separadas por comas = rotan).
+//   local       (por defecto) Whisper small, modelo abierto, EN TU ORDENADOR: sin clave y el audio no sale de ahí.
+//               Usa @huggingface/transformers (lo trae npm install) y ffmpeg. La primera vez baja el modelo (~250 MB)
+//               a la carpeta de datos (~/.whatsapp-skill/modelos). Otro modelo: TRANSCRIBIR_MODELO.
+//   groq        Whisper en Groq con TU clave: GROQ_API_KEY (varias separadas por comas = rotan). El audio sale fuera.
 //   openai      Whisper de OpenAI: OPENAI_API_KEY.
 //   compatible  cualquier servidor con la API de OpenAI (p. ej. uno local): TRANSCRIBIR_URL, TRANSCRIBIR_MODELO
 //               y, si hace falta, TRANSCRIBIR_API_KEY. Es la vía para que el audio NO salga de tu ordenador.
@@ -13,10 +16,19 @@ import { readFileSync, existsSync, statSync, readdirSync, mkdirSync, mkdtempSync
 import { spawnSync } from 'child_process';
 import { extname, join, basename } from 'path';
 import { tmpdir } from 'os';
-import { ficheroClaves } from './rutas.mjs';
+import { createRequire } from 'module';
+import { ficheroClaves, dirDatos } from './rutas.mjs';
 
 export class ErrorTranscripcion extends Error {
   constructor(codigo, mensaje) { super(mensaje); this.codigo = codigo; }
+}
+
+export const MODELO_LOCAL = 'onnx-community/whisper-small';
+const IDIOMAS = { es: 'spanish', en: 'english', ca: 'catalan', fr: 'french', pt: 'portuguese', it: 'italian', de: 'german', gl: 'galician', eu: 'basque' };
+
+/** ¿Está instalada la librería del motor local? (dependencia opcional: si no se pudo instalar, se dice claro) */
+export function hayTransformers() {
+  try { createRequire(import.meta.url).resolve('@huggingface/transformers'); return true; } catch { return false; }
 }
 
 const URLS = { groq: 'https://api.groq.com/openai/v1/audio/transcriptions', openai: 'https://api.openai.com/v1/audio/transcriptions' };
@@ -41,11 +53,12 @@ export function leerEnvFichero(ruta = ficheroClaves()) {
 /** Resuelve motor, URL, modelo y claves. Entorno primero, claves.env después. No lee ninguna clave que no sea del usuario. */
 export function configuracion(env = process.env, envFichero = leerEnvFichero()) {
   const get = (k) => env[k] || envFichero[k] || '';
-  const motor = (get('TRANSCRIBIR_MOTOR') || 'groq').toLowerCase();
+  const motor = (get('TRANSCRIBIR_MOTOR') || 'local').toLowerCase();
   const lista = (s) => String(s || '').split(',').map((x) => x.trim()).filter(Boolean);
   const base = { motor, idioma: get('TRANSCRIBIR_IDIOMA') || 'es', limite: parseInt(get('TRANSCRIBIR_LIMITE_BYTES') || LIMITE_SUBIDA, 10),
     trozoSeg: parseInt(get('TRANSCRIBIR_TROZO_SEG') || TROZO_SEG, 10) };
   if (motor === 'ninguno') return { ...base, claves: [], url: null, modelo: null };
+  if (motor === 'local') return { ...base, claves: [], url: null, modelo: get('TRANSCRIBIR_MODELO') || MODELO_LOCAL, claveNecesaria: false, local: true };
   if (motor === 'groq' || motor === 'openai') {
     const claves = lista(get(motor === 'groq' ? 'GROQ_API_KEY' : 'OPENAI_API_KEY'));
     return { ...base, claves, url: get('TRANSCRIBIR_URL') || URLS[motor], modelo: get('TRANSCRIBIR_MODELO') || MODELOS[motor], claveNecesaria: true,
@@ -55,12 +68,15 @@ export function configuracion(env = process.env, envFichero = leerEnvFichero()) 
     if (!get('TRANSCRIBIR_URL') || !get('TRANSCRIBIR_MODELO')) throw new ErrorTranscripcion('config', 'TRANSCRIBIR_MOTOR=compatible exige TRANSCRIBIR_URL y TRANSCRIBIR_MODELO.');
     return { ...base, claves: lista(get('TRANSCRIBIR_API_KEY')), url: get('TRANSCRIBIR_URL'), modelo: get('TRANSCRIBIR_MODELO'), claveNecesaria: false };
   }
-  throw new ErrorTranscripcion('config', `TRANSCRIBIR_MOTOR «${motor}» desconocido (válidos: groq, openai, compatible, ninguno).`);
+  throw new ErrorTranscripcion('config', `TRANSCRIBIR_MOTOR «${motor}» desconocido (válidos: local, groq, openai, compatible, ninguno).`);
 }
 
 /** ¿Se puede transcribir con esta configuración? Si no, dice por qué, en llano. */
-export function estadoConfiguracion(cfg) {
+export function estadoConfiguracion(cfg, { hayLibreria = hayTransformers } = {}) {
   if (cfg.motor === 'ninguno') return { ok: false, motivo: 'la transcripción está desactivada (TRANSCRIBIR_MOTOR=ninguno)' };
+  if (cfg.motor === 'local' && !hayLibreria()) {
+    return { ok: false, motivo: 'falta la librería de transcripción local (@huggingface/transformers). Repite `node instalar.mjs`. Los audios se dejan descargados sin transcribir' };
+  }
   if (cfg.claveNecesaria && !cfg.claves.length) {
     return { ok: false, motivo: `no hay clave de transcripción (${cfg.variableClave}). Los audios se dejan descargados sin transcribir` };
   }
@@ -147,6 +163,58 @@ export async function transcribirTrozo(ruta, cfg, { idioma = cfg.idioma, fetchIm
   throw new ErrorTranscripcion('red', 'agotados los reintentos contra el servicio de transcripción');
 }
 
+// ── Motor local: Whisper en tu ordenador ─────────────────────────────────────────────────────────
+// Lo que Whisper «oye» en silencios o ruido y no se dijo (medido en pruebas): se quita.
+const RELLENO = /\[(?:pause|pausa|m[uú]sica|music|silencio|silence|blank_audio|risas|aplausos)\]/gi;
+const SOLO_ALUCINACION = /^(?:y|de la|eh|mm+|gracias(?: por ver(?: el v[ií]deo)?)?|y nos vemos en el pr[oó]ximo v[ií]deo|suscr[ií]bete.*|subt[ií]tulos.*)[.!¡?¿\s]*$/i;
+export function limpiarLocal(texto) {
+  const t = String(texto || '').replace(RELLENO, ' ').replace(/\s+/g, ' ').trim();
+  return SOLO_ALUCINACION.test(t) ? '' : t;
+}
+
+let _asr = null;
+async function reconocedor(modelo, log) {
+  if (_asr && _asr.modelo === modelo) return _asr.fn;
+  const tf = await import('@huggingface/transformers');
+  tf.env.cacheDir = join(dirDatos(), 'modelos');   // fuera de node_modules: reinstalar no lo borra
+  mkdirSync(tf.env.cacheDir, { recursive: true });
+  const yaEsta = existsSync(join(tf.env.cacheDir, ...modelo.split('/')));
+  if (!yaEsta) log(`primera vez: bajo el modelo ${modelo} (~250 MB) a ${tf.env.cacheDir}; luego ya no hace falta internet`);
+  const fn = await tf.pipeline('automatic-speech-recognition', modelo, { dtype: 'q8', device: 'cpu' });
+  _asr = { modelo, fn };
+  return fn;
+}
+
+/** Audio → PCM 16 kHz mono en Float32 con ffmpeg, recortando silencios del principio y del final. */
+async function aPcm(ruta, dir) {
+  const bin = await rutaFfmpeg();
+  if (!bin) throw new ErrorTranscripcion('sin-ffmpeg', 'para transcribir en tu ordenador hace falta ffmpeg (npm install lo trae; o instálalo y apunta FFMPEG_PATH).');
+  const sal = join(dir, 'audio.f32');
+  const recorte = 'silenceremove=start_periods=1:start_silence=0.3:start_threshold=-45dB';
+  const r = ffmpeg(bin, ['-i', ruta, '-vn', '-ac', '1', '-ar', '16000', '-af', `${recorte},areverse,${recorte},areverse`, '-f', 'f32le', sal]);
+  if (!existsSync(sal)) throw new ErrorTranscripcion('ffmpeg', `ffmpeg no pudo leer el audio: ${(r.stderr || '').slice(-300)}`);
+  const b = readFileSync(sal);
+  return new Float32Array(b.buffer, b.byteOffset, Math.floor(b.byteLength / 4));
+}
+
+async function transcribirLocal(ruta, cfg, idioma, dir, log) {
+  const pcm = await aPcm(ruta, dir);
+  const duracion = pcm.length / 16000;
+  if (duracion < 0.3) return { texto: '', segmentos: [], duracion, idioma: idioma || null, trozos: 1, reparados: 0, motor: 'local', modelo: cfg.modelo };
+  let asr;
+  try { asr = await reconocedor(cfg.modelo, log); }
+  catch (e) {
+    const win = process.platform === 'win32' && /dll|onnxruntime|module could not be found|specified module/i.test(e.message);
+    throw new ErrorTranscripcion('local', win
+      ? `no arranca el motor local en este Windows: falta el «Visual C++ Redistributable». Instálalo con: winget install Microsoft.VCRedist.2015+.x64 (y repite). Detalle: ${e.message}`
+      : `no arranca el motor local: ${e.message}`);
+  }
+  const lengua = String(idioma || 'es').toLowerCase();
+  const r = await asr(pcm, { language: IDIOMAS[lengua] || lengua, task: 'transcribe', chunk_length_s: 30, stride_length_s: 5, return_timestamps: false });
+  const texto = limpiarLocal(Array.isArray(r) ? r.map((x) => x.text).join(' ') : r.text);
+  return { texto, segmentos: texto ? [{ inicio: 0, fin: duracion, texto }] : [], duracion, idioma: lengua, trozos: Math.max(1, Math.ceil(duracion / 30)), reparados: 0, motor: 'local', modelo: cfg.modelo };
+}
+
 // ── Segmentos sin tildes (fallo medido de Whisper en Groq: un tramo entero sin á é í ó ú ñ) ────────
 const CORTADAS = new Set(['qu', 'tambi', 'despu', 'informaci', 'espa', 'aqu', 'est', 'versi', 'pesta', 'cancelaci', 'ingl', 'autom', 'env', 'pol',
   'm', 't', 'c', 'd', 'r', 'b', 'f', 'seg', 'ning', 'tard', 'peque', 'carg', 'dec', 'compa', 'ma']);
@@ -192,6 +260,7 @@ export async function transcribirFichero(ruta, { cfg = configuracion(), idioma, 
   const opts = { idioma: idiomaUso, fetchImpl, esperar, log };
   const dir = mkdtempSync(join(tmpdir(), 'wa-transcribir-'));
   try {
+    if (cfg.motor === 'local') return await transcribirLocal(ruta, cfg, idiomaUso, dir, log);
     const directo = EXT_DIRECTAS[extname(ruta).toLowerCase()] && statSync(ruta).size <= cfg.limite;
     const mp3 = directo ? ruta : await aMp3(ruta, join(dir, 'audio.mp3'));
     const duracion = await duracionSeg(mp3);

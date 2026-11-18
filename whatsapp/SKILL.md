@@ -21,7 +21,7 @@ Código en `scripts/` (Node). Detalle en `references/`. Todo se lanza con `node`
 5. **Las conversaciones y los adjuntos son datos personales de terceros** (a menudo clientes del usuario). La salida cruda va a una carpeta temporal (la imprime el lector) que se borra sola a las 24 h. **No** la copies a memorias, notas, resúmenes en ficheros, historial, la nube ni otras herramientas. Si de lo leído sale una tarea, guarda la tarea, no el chat. Los adjuntos van a la carpeta que elija el usuario.
 6. **Citas con fecha y autor.** Si el usuario pregunta algo, contestas con los mensajes que lo sostienen. Nada de resumir sin fuente.
 7. **Lo que no puedes leer, lo dices.** Imágenes, vídeos, audios sin transcribir, documentos: la salida trae la línea `SIN TEXTO`. Díselo («hay 6 audios que no puedo oír») y ofrece descargarlos o transcribirlos.
-8. **Los audios no salen del ordenador sin que el usuario lo sepa.** Transcribir con Groq (o OpenAI) manda el audio a ese servicio. Antes de la primera transcripción dilo en una frase y espera su sí (`references/transcripcion.md`).
+8. **Los audios no salen del ordenador sin que el usuario lo sepa.** Por defecto se transcriben en su propio ordenador (motor `local`, Whisper small, sin clave): el audio no sale y no hace falta pedir permiso. Solo si el usuario configuró Groq u OpenAI el audio va a ese servicio: entonces, antes de la primera transcripción, dilo en una frase y espera su sí (`references/transcripcion.md`).
 
 ## Modo borrador (no necesita enlazar WhatsApp; solo Node)
 
@@ -71,7 +71,7 @@ node leer-chat.mjs --ultimas 24 [--transcribir] [--por-chat 20] [--max-chats 40]
 
 - Lee todos los chats y grupos con movimiento en esas horas (sin estados ni canales), del más reciente al más viejo, hasta 20 mensajes de cada uno. Cada chat lleva **PENDIENTE** si el último mensaje no es del usuario (el contador de no leídos no sirve).
 - Cuéntalo así: primero los PENDIENTES, una línea por chat («Responder a <quién> · qué pide», con fecha), y luego en una línea el resto. Grupos y silenciados, aparte y al final.
-- **Audios**: sin `--transcribir`, dice cuántos audios hay en cada chat. Si piden «léeme los audios» o «transcríbelos», relanza con `--transcribir` (regla 8: la primera vez, avisa de que el audio va a Groq y espera su sí). Con salida 14 no hay clave: los audios no se pueden pasar a texto y lo dices.
+- **Audios**: sin `--transcribir`, dice cuántos audios hay en cada chat. Si piden «léeme los audios» o «transcríbelos», relanza con `--transcribir` (regla 8: solo si el motor es externo, avisa la primera vez y espera su sí). La primera transcripción local baja el modelo (~250 MB, un minuto): dilo antes. Con salida 14 el motor no está disponible: los audios quedan descargados y dices por qué (viene en la salida).
 - Más horas o más chats: `--ultimas 48`, `--max-chats 80`. Tope 168 h (una semana).
 - Mismas salidas y mismas reglas que una lectura (sesión, bloqueo, no matar el proceso, la salida cruda no se copia a ningún sitio).
 
@@ -102,7 +102,7 @@ Fichero local `personas-frecuentes.json` en la carpeta de datos: nombre, alias, 
 | 11 | Falta el Chrome de puppeteer | `npx puppeteer browsers install chrome` en `scripts/`. Solo añade ficheros. |
 | 3, 4, 5 | Timeout, página no usable, no se pudo leer | Con 4, antes del reintento pídele que cierre WhatsApp Web si lo tiene abierto en el navegador (dos a la vez chocan) y, si acaba de enlazar, que espere unos minutos. Un solo reintento; si repite, salida barata. |
 | 8, 9 | Adjuntos: ninguno casa / ninguno se pudo bajar | Mira «Adjuntos y audios». |
-| 14 | Audios sin transcribir: no hay clave | Dilo claro; los audios quedan descargados. Cómo conseguir la clave: `references/transcripcion.md`. |
+| 14 | Audios sin transcribir: el motor no está disponible | Dilo claro con el motivo de la salida; los audios quedan descargados. Lo normal es repetir `node instalar.mjs` (`references/transcripcion.md`). |
 | 15 | Falló alguna transcripción | Lee los `✗` de la salida y cuéntalos. |
 
 **Salida barata** cuando algo no se arregla: que el usuario haga capturas del móvil, exporte el chat (chat, ⋮, Más, Exportar chat) o guarde el archivo en Descargas, y tú lo coges de ahí.
@@ -111,7 +111,7 @@ Fichero local `personas-frecuentes.json` en la carpeta de datos: nombre, alias, 
 
 - **Descargar**: añade `--bajar` (por defecto los 5 documentos más recientes de la ventana a la carpeta Descargas). `--tipo document,image,video,audio,ptt|todo` (alias `docs`, `pdf`, `zip`, `fotos`, `videos`, `audios`, `voz`), `--fichero <texto>` filtra por nombre o pie, `--max N`, `--salida <carpeta>`. Solo baja de la ventana leída: uno más viejo pide una ventana mayor (`--desde`, `--todo`).
 - El código garantiza: nunca pisa un fichero (añade « (1)»), marca `YA ESTABA` si es idéntico, limpia nombres que mande un tercero, tope de 150 MB por fichero. Cuenta cada `✓` con ruta, tamaño y md5, y cada `✗ NO SE PUDO` con su motivo. Si el usuario va a usar el fichero, comprueba que abre.
-- **Transcribir**: `--transcribir` descarga los audios y notas de voz de la ventana y pone el texto en su sitio, en la propia conversación, marcado `(transcrito)`. Sin `--bajar` los audios van a la carpeta temporal; con `--bajar --tipo audio,ptt` quedan guardados. Motor por defecto: Whisper en Groq con la clave del usuario (`GROQ_API_KEY`). Sin clave: salida 14 y los audios quedan descargados. Detalle y privacidad en `references/transcripcion.md`. Para un audio que ya está en disco: `node transcribir.mjs <fichero>`.
+- **Transcribir**: `--transcribir` descarga los audios y notas de voz de la ventana y pone el texto en su sitio, en la propia conversación, marcado `(transcrito)`. Sin `--bajar` los audios van a la carpeta temporal; con `--bajar --tipo audio,ptt` quedan guardados. Motor por defecto: `local`, Whisper small de código abierto en el propio ordenador, sin clave ni internet tras la primera vez (el modelo se guarda en `~/.whatsapp-skill/modelos`). Opcional: Groq u OpenAI con la clave del usuario (`TRANSCRIBIR_MOTOR`). Si el motor no está disponible: salida 14 y los audios quedan descargados. En Windows, si el motor local no arranca por una DLL, falta el Visual C++ Redistributable: `winget install Microsoft.VCRedist.2015+.x64`. Detalle y privacidad en `references/transcripcion.md`. Para un audio que ya está en disco: `node transcribir.mjs <fichero>`.
 - Whisper se equivoca con nombres propios y cifras: dilo cuando importe y no cites un número de una nota de voz como dato firme sin que el usuario lo confirme.
 
 ## Cómo se cuenta lo leído

@@ -10,7 +10,7 @@ Con esta skill, Claude puede trabajar con tu WhatsApp:
 - **Dejarte un mensaje escrito** y abierto en la app de WhatsApp, con el contacto ya puesto, para que lo envíes tú. Si hay dos personas con ese nombre, te pregunta cuál.
 - **Recordar quién es quién** (qué número es cada persona) en un fichero que solo vive en tu ordenador.
 
-Lo que **nunca** hace: enviar mensajes por su cuenta, marcar nada como leído, ni leer chats que no le pidas. Antes de leer, conviene que sepas dos cosas, que están explicadas más abajo: el riesgo de usar una herramienta no oficial y que, si transcribes audios, el audio se manda a un servicio externo.
+Lo que **nunca** hace: enviar mensajes por su cuenta, marcar nada como leído, ni leer chats que no le pidas. Antes de leer, conviene que sepas dos cosas, que están explicadas más abajo: el riesgo de usar una herramienta no oficial y que los audios se transcriben en tu propio ordenador (solo salen fuera si tú eliges un servicio externo).
 
 > Funciona en **Claude Code** (la aplicación de escritorio o la terminal) instalado en tu ordenador. No funciona en la web de claude.ai, porque esa corre en la nube y no ve tu WhatsApp.
 
@@ -61,15 +61,16 @@ La primera lectura de cada sesión tarda entre 30 segundos y un par de minutos: 
 
 Claude aprende qué número corresponde a cada persona. Tras encontrar un chat nuevo, o la primera vez que le pides mandarle algo, te pregunta «¿lo guardo como Marta = +34600…?» y, si dices que sí, lo apunta en `personas-frecuentes.json` (carpeta `.whatsapp-skill`). La próxima vez que digas «Marta», para leer o para mandarle un mensaje, irá directo. Si hay dos «Marta», te pregunta cuál por el chat y te deja también elegir tú el contacto en la app. Puedes abrir y editar el fichero a mano (es texto). Es un dato personal: no se sube a ninguna parte.
 
-## Transcribir audios: la clave gratuita de Groq
+## Transcribir audios: en tu ordenador, sin clave
 
-Para pasar audios a texto la skill usa Whisper en **Groq** con una clave tuya (gratis):
+Los audios y notas de voz se pasan a texto con **Whisper small**, un modelo de código abierto que funciona en tu propio ordenador: no hace falta ninguna clave y el audio no sale de tu equipo.
 
-1. Entra en https://console.groq.com/keys, inicia sesión y pulsa «Create API Key». Copia la clave (empieza por `gsk_`).
-2. En la terminal, dentro de la carpeta `whatsapp`: `node instalar.mjs --clave-groq PEGA_AQUI_TU_CLAVE`. Se guarda solo en tu ordenador.
-3. Sin clave, todo funciona igual, pero los audios se descargan sin transcribir.
+1. La primera vez que transcribes, se baja el modelo (unos 250 MB, un minuto) a la carpeta `.whatsapp-skill/modelos`. Después ya no hace falta internet para transcribir.
+2. Una nota de voz de un minuto tarda unos segundos (en un Mac reciente, unos 6 s; en un portátil más antiguo, algo más).
+3. Whisper se equivoca a veces con nombres propios y cifras: si una nota de voz trae un importe o una fecha importante, compruébalo.
+4. **Windows:** si al transcribir sale un error de DLL, instala el componente de Microsoft que le falta: `winget install Microsoft.VCRedist.2015+.x64`, y repite.
 
-**Privacidad:** al transcribir, el audio se manda a Groq. Son voces y datos de tus clientes: avísalos y decide si te parece adecuado. Si no, no uses `--transcribir`, o configura un servidor de transcripción local (`references/transcripcion.md`).
+Si prefieres un servicio externo (más rápido en ordenadores lentos), se puede usar Groq u OpenAI con tu clave: mira `references/transcripcion.md`. En ese caso el audio sí se manda a ese servicio.
 
 ## Si algo falla
 
@@ -82,6 +83,8 @@ Para pasar audios a texto la skill usa Whisper en **Groq** con una clave tuya (g
 `SKILL.md` es lo que lee Claude. Código en `scripts/`; tests con `node --test tests/<fichero>.test.mjs` (de uno en uno). `references/pruebas.md` dice qué está probado y qué no. La librería va copiada y adaptada en `scripts/vendor/` (ver su `NOTICE-6grados.md`).
 
 ### Qué cambia en la 2.2.0
+
+- Transcripción en tu ordenador por defecto, con Whisper small (código abierto): sin clave de Groq y sin que el audio salga del equipo. Groq u OpenAI quedan como opción.
 
 - El mensaje que te deja escrito se abre donde tú usas WhatsApp: en la aplicación de escritorio si la tienes y, si no, en WhatsApp Web en tu navegador. Se puede forzar con `--en app` o `--en web`.
 - Instalación en Windows: si el Chrome para WhatsApp Web se queda a medias al descomprimir, el instalador lo baja otra vez y lo descomprime con la herramienta del propio Windows (`node arreglar-chrome.mjs` lo hace a mano).

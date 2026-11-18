@@ -3,7 +3,7 @@
  * instalar.mjs — instala la skill «whatsapp» en tu ordenador (Windows, Mac o Linux). Sin bash, sin rsync.
  *
  *   node instalar.mjs                        copia la skill a ~/.claude/skills/whatsapp e instala lo que necesita
- *   node instalar.mjs --clave-groq gsk_...   además guarda tu clave de Groq (para transcribir audios)
+ *   node instalar.mjs --clave-groq gsk_...   (opcional) transcribe con Groq en vez de en tu ordenador: el audio sale fuera
  *   node instalar.mjs --comprobar            no instala nada: dice cómo está todo
  *   SKILLS_DST=<carpeta> node instalar.mjs   instala en otra carpeta (para probar)
  *   SKIP_NPM=1 node instalar.mjs             solo copia, sin instalar dependencias
@@ -94,17 +94,17 @@ try {
   if (CLAVE && !SOLO_COMPROBAR) {
     const f = join(DATOS, 'claves.env');
     let previo = ''; try { previo = readFileSync(f, 'utf8'); } catch { /* nuevo */ }
-    const resto = previo.split(/\r?\n/).filter((l) => l.trim() && !/^\s*GROQ_API_KEY\s*=/.test(l));
-    writeFileSync(f, [...resto, `GROQ_API_KEY=${CLAVE}`].join('\n') + '\n', 'utf8');
+    const resto = previo.split(/\r?\n/).filter((l) => l.trim() && !/^\s*(GROQ_API_KEY|TRANSCRIBIR_MOTOR)\s*=/.test(l));
+    writeFileSync(f, [...resto, `GROQ_API_KEY=${CLAVE}`, 'TRANSCRIBIR_MOTOR=groq'].join('\n') + '\n', 'utf8');
     try { chmodSync(f, 0o600); } catch { /* Windows */ }
-    ok(`clave de Groq guardada en ${f} (solo en tu ordenador)`);
+    ok(`clave de Groq guardada en ${f} (solo en tu ordenador); los audios se transcribirán con Groq (el audio sale fuera). Para volver al motor de tu ordenador, borra esas dos líneas`);
   }
   const cfg = t.configuracion();
   const est = t.estadoConfiguracion(cfg);
-  if (est.ok) ok(`transcripción de audios lista (${cfg.motor})`);
-  else aviso(`transcripción: ${est.motivo}. Se consigue gratis una clave en https://console.groq.com/keys (mira el README); es opcional.`);
+  if (est.ok) ok(cfg.motor === 'local' ? 'transcripción de audios lista, en tu ordenador (Whisper small; la primera vez baja el modelo, ~250 MB)' : `transcripción de audios lista (${cfg.motor}: el audio se manda a ese servicio)`);
+  else aviso(`transcripción: ${est.motivo}. Es opcional: lo demás funciona igual.`);
   const ff = await t.rutaFfmpeg();
-  if (ff) ok('ffmpeg disponible (para audios largos)'); else aviso('no hay ffmpeg: los audios normales se transcriben igual; los muy largos no. En Windows: winget install ffmpeg');
+  if (ff) ok('ffmpeg disponible (para transcribir)'); else aviso('no hay ffmpeg: sin él no se transcribe en tu ordenador. En Windows: winget install ffmpeg');
 } catch (e) { aviso(`no pude comprobar la transcripción: ${e.message}`); }
 
 linea();

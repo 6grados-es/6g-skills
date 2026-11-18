@@ -12,6 +12,7 @@
     "whatsapp-web.js": "file:./vendor/whatsapp-web.js"
   },
   "optionalDependencies": {
-    "ffmpeg-static": "^5.2.0"
+    "ffmpeg-static": "^5.2.0",
+    "@huggingface/transformers": "3.8.1"
   }
 }

@@ -16,7 +16,7 @@ El lector (`leer-chat.mjs`) imprime `CODIGO: n` y lo deja también en `codigo.tx
 | 10 | Sesión no vinculada o no válida | «Tu WhatsApp no está enlazado (o se desenlazó). No lo reenlazo por mi cuenta: escanear un QR de más puede desincronizarte WhatsApp. Si quieres, lo vemos con calma.» Nunca QR, nunca restaurar copias. |
 | 11 | Falta el Chrome de puppeteer | Se repone con `npx puppeteer browsers install chrome` en `scripts/`; no toca la sesión. |
 | 12 | La sesión la usa otro proceso | Se espera a que acabe y se repite. Si no hay otro proceso real y el bloqueo es viejo, el código lo retira solo; si persiste, mira `sesion.lock` en la carpeta de datos (no lo borres a ciegas). |
-| 14 | `--transcribir` sin clave | «Los audios quedan descargados sin transcribir. Con una clave gratuita de Groq se transcriben.» |
+| 14 | `--transcribir` sin motor disponible | «Los audios quedan descargados sin transcribir» y el motivo: con el motor local, falta su librería (repetir `node instalar.mjs`); con Groq u OpenAI, falta la clave. |
 | 15 | Falló alguna transcripción | Se citan los `✗` con su motivo (clave rechazada, sin ffmpeg, servicio caído). |
 
 `vincular.mjs`: 0 vinculado · 1 error al arrancar · 2 WhatsApp rechazó la sesión · 3 no se escaneó a tiempo · 10 ya hay sesión (no hace nada) · 11 falta Chrome · 12 sesión en uso.

@@ -6,7 +6,7 @@ import { mkdtempSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { configuracion, estadoConfiguracion, transcribirTrozo, transcribirFichero, sinTildes, marca, rutaFfmpeg, ErrorTranscripcion } from '../lib/transcribir.mjs';
+import { configuracion, estadoConfiguracion, transcribirTrozo, transcribirFichero, sinTildes, marca, rutaFfmpeg, ErrorTranscripcion, limpiarLocal, MODELO_LOCAL } from '../lib/transcribir.mjs';
 
 const dir = mkdtempSync(join(tmpdir(), 'wa-tr-'));
 const bin = await rutaFfmpeg();
@@ -18,12 +18,12 @@ if (bin) {
   mp3Largo = join(dir, 'tono-largo.mp3'); gen(mp3Largo, 20, ['-c:a', 'libmp3lame', '-q:a', '5']);
 }
 
-const sinEnv = {};                         // entorno vacío: ni claves de nadie ni claves.env
-const cfgGroq = (extra = {}) => configuracion({ GROQ_API_KEY: 'gsk_prueba_1,gsk_prueba_2', ...extra }, {});
+const sinEnv = { TRANSCRIBIR_MOTOR: 'groq' }; // Groq sin clave: ni claves de nadie ni claves.env
+const cfgGroq = (extra = {}) => configuracion({ TRANSCRIBIR_MOTOR: 'groq', GROQ_API_KEY: 'gsk_prueba_1,gsk_prueba_2', ...extra }, {});
 const respuesta = (status, cuerpo, cab = {}) => ({ status, headers: { get: (k) => cab[k.toLowerCase()] ?? null }, json: async () => cuerpo, text: async () => JSON.stringify(cuerpo) });
 const ok = (texto, segs) => respuesta(200, { text: texto, language: 'es', segments: segs || [{ start: 0, end: 1.5, text: ` ${texto}` }] });
 
-test('configuración: Groq por defecto, varias claves separadas por comas, y NUNCA una clave de otro', () => {
+test('configuración de Groq: varias claves separadas por comas, y NUNCA una clave de otro', () => {
   const c = cfgGroq();
   assert.equal(c.motor, 'groq');
   assert.match(c.url, /api\.groq\.com\/openai\/v1\/audio\/transcriptions/);
@@ -33,8 +33,8 @@ test('configuración: Groq por defecto, varias claves separadas por comas, y NUN
 });
 
 test('la clave también se lee de claves.env y el entorno manda sobre el fichero', () => {
-  assert.deepEqual(configuracion({}, { GROQ_API_KEY: 'gsk_del_fichero' }).claves, ['gsk_del_fichero']);
-  assert.deepEqual(configuracion({ GROQ_API_KEY: 'gsk_entorno' }, { GROQ_API_KEY: 'gsk_del_fichero' }).claves, ['gsk_entorno']);
+  assert.deepEqual(configuracion({}, { TRANSCRIBIR_MOTOR: 'groq', GROQ_API_KEY: 'gsk_del_fichero' }).claves, ['gsk_del_fichero']);
+  assert.deepEqual(configuracion({ TRANSCRIBIR_MOTOR: 'groq', GROQ_API_KEY: 'gsk_entorno' }, { GROQ_API_KEY: 'gsk_del_fichero' }).claves, ['gsk_entorno']);
 });
 
 test('sin clave el estado lo dice claro y avisa de que los audios quedan sin transcribir', () => {
@@ -146,4 +146,22 @@ test('un segmento sin tildes («informaci») se detecta y se retranscribe; si no
 test('marca da mm:ss y h:mm:ss', () => {
   assert.equal(marca(65), '01:05');
   assert.equal(marca(3725), '1:02:05');
+});
+
+// ── Motor local (por defecto) ──────────────────────────────────────────────────────────────────────
+test('por defecto transcribe en tu ordenador: motor local, Whisper small, sin clave', () => {
+  const c = configuracion({}, {});
+  assert.equal(c.motor, 'local'); assert.equal(c.modelo, MODELO_LOCAL); assert.deepEqual(c.claves, []); assert.equal(c.url, null);
+  assert.equal(estadoConfiguracion(c, { hayLibreria: () => true }).ok, true);
+  const sin = estadoConfiguracion(c, { hayLibreria: () => false });
+  assert.equal(sin.ok, false); assert.match(sin.motivo, /instalar\.mjs/);
+  assert.equal(configuracion({ TRANSCRIBIR_MODELO: 'onnx-community/whisper-base' }, {}).modelo, 'onnx-community/whisper-base');
+});
+
+test('lo que Whisper se inventa en silencios o ruido se quita; lo dicho se queda', () => {
+  assert.equal(limpiarLocal(' [PAUSE] '), '');
+  assert.equal(limpiarLocal(' y'), '');
+  assert.equal(limpiarLocal(' y nos vemos en el próximo vídeo.'), '');
+  assert.equal(limpiarLocal('Hola Marta [Música] te llamo luego'), 'Hola Marta te llamo luego');
+  assert.equal(limpiarLocal('y luego vamos'), 'y luego vamos');
 });
