@@ -50,10 +50,11 @@ Lee `formato.md` antes de la primera escritura de la sesión.
 | Dicen | Modo | Comando (desde la raíz del repo) |
 |---|---|---|
 | «crea la daily de producto / la de redes / la daily / la weekly (de hoy)» | CREAR | `crear producto [--dia D] [--hora HH:MM]` |
+| «termina la reunión», «hemos acabado la daily», «cierra la reunión» | TERMINAR (todo tema sin ver pasa a la siguiente) | `terminar producto [--dia D]` |
 | «crea las reuniones de hoy», «qué reuniones recurrentes hay», «se ha creado la de…» | RECURRENTES | `recurrentes [--dia D]` · `crear-recurrentes [--dia D] [--simular]` |
 | «formatea la daily de hoy», «ponla en el formato», «ordena esta reunión» | FORMATEAR | `formatear daily [--dia D]` y luego `formatear <id> --aplicar propuesta.json` |
 | «añade a informar…», «para informar: …» | AÑADIR → Informar | `anadir producto informar "…" --persona pedro [--detalle "…"]` |
-| «añade un tema…», «propuesta: …», «hay que hablar de…» | AÑADIR → Temas | `anadir producto temas "…" --persona pedro` |
+| «añade un tema…», «propuesta: …», «hay que hablar de…» | AÑADIR → Temas | `anadir producto temas "…" --persona pedro [--enlace https://…]` (el enlace saca el botón «Abrir» de la web; uno pegado en el texto no) |
 | «apunta un siguiente paso», «X se encarga de…», «me comprometo a…» | AÑADIR → Siguientes pasos (**siempre con fecha**) | `anadir producto pasos "…" --persona santi --fecha miércoles` |
 | «apárcalo», «al parking», «para más adelante» | AÑADIR → Parking (tema) o Aparcados y mejoras (paso) | `anadir daily parking "…"` · `anadir daily aparcados "…"` |
 | «celebramos…», «dato de la semana», «postmoto: …» (Weekly) | AÑADIR → Celebración / Resumen de la semana / Postmoto | `anadir weekly celebracion "…"` · `anadir weekly postmoto "…" --grupo "Qué fue bien"` |
@@ -72,6 +73,15 @@ Lee `formato.md` antes de la primera escritura de la sesión.
 | «qué tareas tengo», «qué to-dos tiene Santi» | CONSULTAR | `todos santi` |
 | «qué quedó pendiente de la anterior», «cómo va la reunión» | CONSULTAR | `leer producto [--dia D]` |
 | «la transcripción de la reunión X», «qué se dijo en…» | TRANSCRIPCIÓN | `plaud producto [--md]`; si Plaud no está conectado, skill `6g-plaud` |
+
+### Elegir la reunión de un tema o un paso (Pedro, daily de producto 19-nov)
+
+Antes de AÑADIR un tema, un informar o un siguiente paso, decide a qué reunión va. Si Pedro no la nombra, **propón la reunión y que él confirme** (una línea: «¿Lo apunto en la daily de producto?»); solo si la dice explícita, se apunta sin preguntar.
+- **Producto** (`producto`): lo de Santi y Pedro: diseño de producto, clientes.
+- **Contenido** (`redes`): lo de Santi y Pablo: marketing, contenido.
+- **Daily** (`daily`): lo de los tres, cosas de socios.
+- **Siguientes pasos de producto: solo salen y se revisan en la daily de producto.** Un paso de producto no se apunta en la daily ni en contenido, ni se arrastra a su Revisar; no se mezclan los siguientes pasos entre reuniones (Santi: «Eso es un pin grande»). Si dudas de si un paso es de producto, pregunta.
+- **Recursos y artefactos**: si el tema lleva un recurso, pon el enlace sin que te lo pidan. Si es un **artefacto** (enlace de claude.ai/artifact), **compártelo con Santi y Pablo** antes de dar el tema por apuntado, para que puedan abrirlo en la reunión (Pedro: «ese artefacto tiene que compartirlo con Pablo y con Santi»). Lo compartes tú desde el menú Compartir de claude.ai (Claude in Chrome); no se le deja a Pedro. Di en el eco que lo compartiste. Esto sustituye al «basta con poner el enlace» del 18-nov.
 
 `producto` puede ser cualquier tipo de `tipos.json` (la reunión de ese tipo de hoy, o la de `--dia`) o el id de la reunión (sale en `hoy` y en su enlace). Las líneas se buscan por texto, exacto o una parte. Si casan varias, el comando lista los ids para elegir.
 
@@ -151,6 +161,7 @@ La web, en una reunión sin formato, enseña este camino y copia la petición pa
 Solo en la **reunión de trabajo** (la de hoy o una futura); en una pasada, dilo. El comando lo comprueba.
 - **↓** (`pasar … --fecha F`): no está hecha y se vuelve a comprometer con **fecha nueva**; pregunta la fecha si no la dicen. La copia va a «Siguientes pasos» con la fecha y las veces que se ha pasado («↓n»); la de «Revisar» se queda como **pasada**, que es lo que cuenta el cumplimiento. La anterior no se toca.
 - **Aparcar** (`aparcar …`): no es para ya. La copia va a «Aparcados y mejoras», sin fecha; en «Revisar» se queda como **aparcada**.
+- **Terminar la reunión** (`terminar <reunión>`; en la web, «Terminar reunión» arriba): todo tema de Temas **sin ver** (ni visto ni punto fijo ni del Parking) pasa a Temas de la siguiente reunión de su cadena, con «↓n». Si la siguiente no existe, entra al crearla: `crear` recoge siempre los temas sin ver de la anterior aunque nadie la terminara. Repetirlo no duplica. Pedro (18-nov): «cuando se termine una reunión todos los temas que no se hayan visto se pasen a la siguiente». Al acabar una reunión, lánzalo siempre.
 - **Pasar un tema** (`pasar <reunión> "tema"`, sin fecha): no se ha tratado y va a **Temas de la próxima reunión** de su cadena, con «↓1» (las veces que se ha pasado). En esta se queda atenuado («→ próxima reunión»). Si la siguiente ya está creada, aparece en ella al momento. `--no` lo deshace. Los puntos fijos no se pasan: salen solos.
 - **Tema → to-do** (`mover-a <reunión> "tema" pasos --fecha F --persona P`): el tema pasa a «Siguientes pasos» con fecha y con esa persona delante. Si el tema ya lleva persona, `--persona` sobra.
 - **Fecha** (`fecha … F`): corrige el día de un paso de «Siguientes pasos» de la reunión de hoy. Lo que ya está en «Revisar» solo cambia de fecha con ↓.
