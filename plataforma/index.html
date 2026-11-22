@@ -343,7 +343,7 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
     });
     return e;
   }
-  function seguro(url) { return /^https?:\/\//i.test(url || '') ? url : null; }
+  function seguro(url) { return /^(https?:\/\/|data:image\/(png|jpe?g|webp|gif);base64,)/i.test(url || '') ? url : null; }
   function inicial(t) { return (String(t || '?').replace(/[^\p{L}\p{N}]/gu, '').charAt(0) || '?').toUpperCase(); }
   // Logo: la marca en monocromo (simple-icons) si hay `logo`; si no, el emoji de `icono`; si no, la inicial.
   function logo(obj, peq) {
