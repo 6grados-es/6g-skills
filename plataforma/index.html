@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tu plataforma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Montserrat:wght@600&display=swap">
+<script src="datos.js"></script>
+<style>
+/* Tu plataforma · 6 Grados. Blanco y negro con el sistema de diseño de 6 Grados (Geist, menú a la izquierda, punto rojo
+   en el título, tema claro y oscuro). La marca sale de `marca` en datos.js: para adaptarla se cambia ahí, no aquí. */
+:root {
+  color-scheme: light;
+  --marca: #dc0a06;
+  --acento: #171213; --acento-texto: #ffffff;
+  --pagina: #f6f3f3; --tarjeta: #ffffff; --menu: #ffffff; --hueco: #f1eded;
+  --tinta: #171213; --tinta-2: #4b4244; --tinta-3: #6f6466;
+  --linea: rgba(0,0,0,.09); --linea-fuerte: rgba(0,0,0,.2); --gris: rgba(0,0,0,.045);
+  --ok: #1d7a46; --mal: #c42b1c; --aviso: #9a6400;
+  --sombra: 0 1px 2px rgba(0,0,0,.04), 0 6px 24px rgba(0,0,0,.05);
+  --radio: 18px;
+  --logo-filtro: none;
+  --f-texto: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --f-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --f-ceja: 'Montserrat', 'Geist', sans-serif;
+}
+html[data-tema='oscuro'] {
+  color-scheme: dark;
+  --marca: #f2413d;
+  --acento: #ffffff; --acento-texto: #000000;
+  --pagina: #000000; --tarjeta: #121011; --menu: #0a0708; --hueco: #1b1718;
+  --tinta: #ffffff; --tinta-2: #c9bec0; --tinta-3: #968a8c;
+  --linea: rgba(255,255,255,.1); --linea-fuerte: rgba(255,255,255,.24); --gris: rgba(255,255,255,.06);
+  --ok: #4cc27f; --mal: #f0867f; --aviso: #e3b34d;
+  --sombra: none;
+  --logo-filtro: invert(1);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body { font-family: var(--f-texto); font-size: 15px; line-height: 1.5; color: var(--tinta); background: var(--pagina); -webkit-font-smoothing: antialiased; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a, a:visited { color: var(--tinta); }
+.app { display: grid; grid-template-columns: 252px minmax(0, 1fr); min-height: 100vh; }
+
+/* ---------- menú ---------- */
+.menu { background: var(--menu); border-right: 1px solid var(--linea); padding: 22px 14px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; }
+.marca { display: flex; align-items: center; gap: 12px; padding: 2px 10px 24px; }
+.marca-logo { width: 38px; height: 38px; border-radius: 11px; background: var(--acento); color: var(--acento-texto); display: grid; place-items: center; font-weight: 600; font-size: 17px; flex: none; overflow: hidden; }
+.marca-logo img { width: 100%; height: 100%; object-fit: cover; }
+button.marca-logo { border: 0; padding: 0; position: relative; cursor: pointer; }
+button.marca-logo .cambiar { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.55); color: #fff; opacity: 0; transition: opacity .12s; }
+button.marca-logo .cambiar svg { width: 16px; height: 16px; }
+button.marca-logo:hover .cambiar, button.marca-logo:focus-visible .cambiar { opacity: 1; }
+.rutina .disparo .comprueba { display: block; font-size: 12px; color: var(--tinta-3); margin-top: 2px; }
+.marca b { display: block; font-weight: 600; letter-spacing: -.01em; line-height: 1.2; }
+.marca small { color: var(--tinta-3); font-size: 12px; }
+.item { display: flex; align-items: center; gap: 12px; text-align: left; border: 0; background: none; border-radius: 12px; padding: 10px 12px; width: 100%; position: relative; }
+.item:hover { background: var(--gris); }
+.item.activo { background: var(--acento); color: var(--acento-texto); }
+.item .ico { width: 20px; height: 20px; flex: none; }
+.item .txt { flex: 1; min-width: 0; }
+.item .txt b { display: block; font-weight: 500; line-height: 1.25; }
+.item .txt small { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; opacity: .6; }
+.item .cand { width: 15px; height: 15px; opacity: .55; flex: none; }
+.item.bloqueado:not(.activo) { color: var(--tinta-3); }
+.pie-menu { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 4px; }
+.puente { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--tinta-2); line-height: 1.35; padding: 10px 12px; border-radius: 12px; background: var(--gris); }
+.puente i { width: 8px; height: 8px; border-radius: 50%; background: var(--tinta-3); flex: none; margin-top: 4px; }
+.puente.on i { background: var(--ok); }
+.tema { border: 1px solid var(--linea-fuerte); background: none; border-radius: 999px; padding: 8px 14px; font-size: 13px; display: inline-flex; gap: 8px; align-items: center; justify-content: center; }
+.tema:hover { background: var(--gris); }
+.tema svg { width: 16px; height: 16px; flex: none; }
+.fecha { color: var(--tinta-3); font-size: 12px; padding-left: 4px; }
+
+/* ---------- cabecera ---------- */
+.contenido { padding: 40px 48px 96px; max-width: 1200px; width: 100%; }
+.ceja { font-family: var(--f-ceja); font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--marca); margin: 0 0 10px; }
+h1 { font-size: 36px; line-height: 1.08; letter-spacing: -.035em; font-weight: 500; margin: 0 0 10px; }
+h1::after { content: ''; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--marca); margin-left: 6px; vertical-align: baseline; }
+.sub { color: var(--tinta-2); margin: 0 0 26px; max-width: 64ch; }
+.barra { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 22px; }
+.cifras { display: flex; flex-wrap: wrap; gap: 26px; margin: 0 0 26px; }
+.cifra b { display: block; font-family: var(--f-mono); font-size: 30px; font-weight: 500; line-height: 1; letter-spacing: -.02em; }
+.cifra span { color: var(--tinta-3); font-size: 13px; }
+.cifra.mal b { color: var(--mal); }
+.segmento { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--hueco); gap: 2px; flex-wrap: wrap; }
+.segmento button { border: 0; background: none; border-radius: 999px; padding: 6px 14px; font-size: 13px; color: var(--tinta-2); }
+.segmento button.on { background: var(--tarjeta); color: var(--tinta); box-shadow: 0 1px 3px rgba(0,0,0,.12); font-weight: 500; }
+html[data-tema='oscuro'] .segmento button.on { background: #2a2526; }
+
+/* ---------- piezas comunes ---------- */
+.logo { width: 46px; height: 46px; border-radius: 13px; background: var(--hueco); display: grid; place-items: center; flex: none; font-size: 22px; line-height: 1; font-weight: 500; }
+.logo img { width: 24px; height: 24px; filter: var(--logo-filtro); }
+.logo.peq { width: 34px; height: 34px; border-radius: 10px; font-size: 17px; }
+.logo.peq img { width: 18px; height: 18px; }
+.logo.plano svg { width: 22px; height: 22px; } .logo.plano.peq svg { width: 17px; height: 17px; }
+.logo img.propia { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; filter: none; }
+.etq svg { width: 12px; height: 12px; }
+.tarjeta { border: 1px solid var(--linea); background: var(--tarjeta); border-radius: var(--radio); box-shadow: var(--sombra); }
+.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.etq { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--linea-fuerte); border-radius: 999px; padding: 1px 9px; font-size: 12px; color: var(--tinta-2); white-space: nowrap; }
+.etq.mono { font-family: var(--f-mono); }
+.punto { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; background: var(--tinta-3); }
+.punto.ok { background: var(--ok); } .punto.falla { background: var(--mal); } .punto.pendiente { background: transparent; border: 2px solid var(--aviso); }
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--tinta); background: none; border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 500; text-decoration: none; white-space: nowrap; color: var(--tinta); }
+.btn:hover { background: var(--acento); color: var(--acento-texto); }
+.btn svg { width: 13px; height: 13px; }
+.btn.suave { border-color: var(--linea-fuerte); font-weight: 400; color: var(--tinta-2); }
+.btn.suave:hover { background: var(--gris); color: var(--tinta); }
+.btn.principal { background: var(--marca); border-color: var(--marca); color: #fff; }
+.btn.principal:hover { filter: brightness(1.08); background: var(--marca); color: #fff; }
+.mas { width: 32px; height: 32px; border-radius: 50%; border: 0; background: none; display: grid; place-items: center; color: var(--tinta-3); flex: none; }
+.mas:hover { background: var(--gris); color: var(--tinta); }
+.mas svg { width: 18px; height: 18px; }
+.interruptor { width: 44px; height: 26px; border-radius: 999px; border: 0; background: var(--linea-fuerte); position: relative; flex: none; padding: 0; transition: background .15s; }
+.interruptor::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .15s; }
+.interruptor.on { background: var(--ok); }
+.interruptor.on::after { transform: translateX(18px); }
+.pendiente-aviso { font-size: 12px; color: var(--aviso); display: inline-flex; gap: 5px; align-items: center; }
+
+/* ---------- conectores ---------- */
+.servicio { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.servicio .cab { display: flex; gap: 14px; align-items: center; }
+.servicio h3 { margin: 0; font-size: 17px; font-weight: 500; letter-spacing: -.01em; }
+.servicio .cab p { margin: 2px 0 0; color: var(--tinta-2); font-size: 13.5px; line-height: 1.4; }
+.n-cuentas { font-family: var(--f-ceja); font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--tinta-3); padding-top: 12px; }
+.cuentas { display: flex; flex-direction: column; border-top: 1px solid var(--linea); }
+.cuenta { display: grid; grid-template-columns: 30px minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 8px 0 0; }
+.cuenta + .cuenta { border-top: 1px dashed var(--linea); margin-top: 10px; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--acento); color: var(--acento-texto); display: grid; place-items: center; font-size: 12px; font-weight: 600; }
+.cuenta b { font-weight: 500; font-size: 14px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cuenta small { font-size: 12px; color: var(--tinta-3); display: flex; align-items: center; gap: 6px; }
+.cuenta { grid-template-columns: 30px minmax(0,1fr) auto 28px; }
+.cuenta .mas { width: 28px; height: 28px; } .cuenta .mas svg { width: 15px; height: 15px; }
+.renombrar { width: 100%; border: 1px solid var(--tinta); background: var(--pagina); color: var(--tinta); border-radius: 8px; padding: 4px 8px; font: inherit; font-size: 14px; font-weight: 500; }
+@media (hover: hover) { .cuenta .mas { opacity: 0; transition: opacity .12s; } .cuenta:hover .mas, .cuenta .mas:focus-visible { opacity: 1; } }
+
+/* ---------- skills ---------- */
+.area { margin: 0 0 30px; }
+.area h2 { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 500; letter-spacing: -.01em; margin: 0 0 10px; }
+.area h2 .n { font-family: var(--f-mono); font-size: 12px; color: var(--tinta-3); font-weight: 400; }
+.lista { overflow: hidden; }
+.skill { display: grid; grid-template-columns: 34px minmax(150px, 1fr) minmax(200px, 1.7fr) minmax(150px, .9fr) 44px; gap: 16px; align-items: center; padding: 14px 18px; }
+.skill + .skill { border-top: 1px solid var(--linea); }
+.skill.apagada .nom, .skill.apagada .para, .skill.apagada .logo, .skill.apagada .como { opacity: .45; }
+.skill .nom { font-weight: 500; font-size: 15px; line-height: 1.3; word-break: break-word; }
+.skill .nom code { display: block; font-family: var(--f-mono); font-size: 12px; color: var(--tinta-3); font-weight: 400; }
+.skill .para { color: var(--tinta-2); font-size: 14px; line-height: 1.4; }
+.skill .como { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.skill .cuando { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip-cuando { display: inline-flex; align-items: center; gap: 6px; border: 0; background: var(--hueco); border-radius: 999px; padding: 4px 11px; font-size: 12.5px; color: var(--tinta); text-align: left; line-height: 1.3; }
+.chip-cuando svg { width: 13px; height: 13px; flex: none; }
+button.chip-cuando { background: none; border: 1px dashed var(--linea-fuerte); color: var(--tinta-2); }
+button.chip-cuando:hover { border-style: solid; color: var(--tinta); }
+button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space: nowrap; max-width: 100%; }
+.chip-cuando .corto { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.chip-cuando .punto { width: 7px; height: 7px; }
+@media (hover: hover) { .skill button.chip-cuando:not(.fijo) { opacity: 0; transition: opacity .12s; } .skill:hover button.chip-cuando, .skill button.chip-cuando:focus-visible { opacity: 1; } }
+.banda { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border: 1px solid var(--aviso); border-radius: var(--radio); padding: 12px 16px; margin: 0 0 26px; font-size: 14px; }
+.banda .txt { flex: 1 1 260px; color: var(--tinta-2); } .banda .txt b { color: var(--tinta); font-weight: 500; }
+
+/* ---------- rutinas ---------- */
+.titulo-seccion { display: flex; align-items: baseline; gap: 12px; margin: 44px 0 6px; flex-wrap: wrap; }
+.titulo-seccion h2 { font-size: 24px; letter-spacing: -.025em; font-weight: 500; margin: 0; }
+.rutina { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.rutina.apagada .disparo, .rutina.apagada .texto-rutina { opacity: .45; }
+.rutina .disparo { display: flex; gap: 12px; align-items: center; }
+.rutina .disparo .logo { background: var(--acento); color: var(--acento-texto); }
+.rutina .disparo .logo svg { width: 22px; height: 22px; }
+.rutina .disparo small { display: block; font-family: var(--f-ceja); font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--tinta-3); }
+.rutina .disparo b { font-weight: 500; font-size: 16px; line-height: 1.25; letter-spacing: -.01em; }
+.rutina h3 { margin: 0; font-size: 15px; font-weight: 500; }
+.rutina p { margin: 2px 0 0; font-size: 13.5px; color: var(--tinta-2); line-height: 1.4; }
+.pie-rutina { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--linea); padding-top: 12px; margin-top: auto; }
+.pie-rutina .mas.primero { margin-left: auto; }
+.titulo-seccion .btn { margin-left: auto; align-self: center; }
+
+/* ---------- apps ---------- */
+.app-tarjeta { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.app-tarjeta .cab { display: flex; gap: 14px; align-items: flex-start; }
+.app-tarjeta h3 { margin: 0; font-size: 16px; font-weight: 500; letter-spacing: -.01em; line-height: 1.3; }
+.app-tarjeta .cab p { margin: 3px 0 0; color: var(--tinta-2); font-size: 13.5px; line-height: 1.4; }
+.app-tarjeta .pie { display: flex; align-items: center; gap: 8px; margin-top: auto; flex-wrap: wrap; }
+.app-tarjeta .pie .btn { margin-left: auto; }
+.buscar { display: flex; align-items: center; gap: 8px; border: 1px solid var(--linea-fuerte); border-radius: 999px; padding: 0 12px; background: var(--tarjeta); color: var(--tinta-3); flex: 0 1 260px; min-width: 0; }
+.buscar svg { width: 15px; height: 15px; flex: none; }
+.buscar input { border: 0; background: none; outline: 0; font: inherit; font-size: 14px; color: var(--tinta); padding: 7px 0; width: 100%; min-width: 0; }
+.buscar:focus-within { border-color: var(--tinta); }
+.fila-art { display: grid; grid-template-columns: 34px minmax(0,1fr) auto auto 32px; gap: 14px; align-items: center; padding: 12px 18px; }
+.fila-art + .fila-art { border-top: 1px solid var(--linea); }
+.nom-art b { font-weight: 500; display: block; }
+.nom-art span { font-size: 13px; color: var(--tinta-2); }
+.menu-flot { position: absolute; z-index: 30; background: var(--tarjeta); border: 1px solid var(--linea-fuerte); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.18); padding: 5px; min-width: 200px; }
+.menu-flot button { display: flex; width: 100%; gap: 8px; align-items: center; border: 0; background: none; border-radius: 8px; padding: 8px 10px; font-size: 14px; text-align: left; }
+.menu-flot button:hover { background: var(--gris); }
+.menu-flot button.peligro { color: var(--mal); }
+
+/* ---------- bloqueada y vacía ---------- */
+.bloqueo { border: 1px dashed var(--linea-fuerte); border-radius: 24px; padding: 52px 32px; text-align: center; max-width: 660px; display: flex; flex-direction: column; align-items: center; gap: 14px; background: var(--tarjeta); }
+.bloqueo .grande { width: 58px; height: 58px; border-radius: 50%; background: var(--hueco); display: grid; place-items: center; }
+.bloqueo .grande svg { width: 26px; height: 26px; }
+.bloqueo h2 { margin: 0; font-size: 22px; font-weight: 500; letter-spacing: -.02em; }
+.bloqueo p { margin: 0; color: var(--tinta-2); max-width: 46ch; }
+.prompt-nombre { font-family: var(--f-mono); font-size: 14px; border: 1px solid var(--linea-fuerte); border-radius: 10px; padding: 8px 14px; background: var(--hueco); }
+.vacio { color: var(--tinta-3); border: 1px dashed var(--linea-fuerte); border-radius: var(--radio); padding: 30px; text-align: center; }
+
+/* ---------- diálogo y aviso ---------- */
+.velo { position: fixed; inset: 0; background: rgba(0,0,0,.38); display: grid; place-items: center; z-index: 50; padding: 16px; }
+.dialogo { background: var(--tarjeta); border: 1px solid var(--linea-fuerte); border-radius: 22px; width: min(480px, 100%); padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.dialogo h3 { margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -.02em; }
+.dialogo p { margin: 0; color: var(--tinta-2); font-size: 14px; }
+.dialogo label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--tinta-2); }
+.dialogo select, .dialogo input[type=time], .dialogo input[type=text] { border: 1px solid var(--linea-fuerte); background: var(--pagina); border-radius: 10px; padding: 9px 11px; font-size: 15px; color: var(--tinta); width: 100%; }
+.dialogo .fila2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.dialogo .fila3 { display: grid; grid-template-columns: minmax(170px, 1.5fr) 1fr 1fr; gap: 10px; }
+@media (max-width: 560px) { .dialogo .fila3 { grid-template-columns: 1fr 1fr; } .dialogo .fila3 > :first-child { grid-column: 1 / 3; } }
+.dialogo .resumen { background: var(--hueco); border-radius: 12px; padding: 12px 14px; font-size: 15px; font-weight: 500; display: flex; gap: 10px; align-items: center; }
+.dialogo .resumen svg { width: 18px; height: 18px; flex: none; }
+.dialogo .acciones { display: flex; gap: 8px; justify-content: flex-end; }
+.aviso { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--acento); color: var(--acento-texto); border-radius: 999px; padding: 10px 16px 10px 18px; font-size: 14px; display: flex; gap: 14px; align-items: center; z-index: 60; box-shadow: 0 8px 30px rgba(0,0,0,.25); max-width: calc(100% - 32px); }
+.aviso button { border: 0; background: none; color: inherit; font-weight: 600; text-decoration: underline; padding: 0; }
+
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .menu { position: sticky; top: 0; z-index: 20; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 10px 12px; gap: 6px; border-right: 0; border-bottom: 1px solid var(--linea); }
+  .marca { padding: 0 4px; flex: 1 1 auto; }
+  .pie-menu { margin: 0; flex-direction: row; align-items: center; padding: 0; }
+  .puente, .fecha { display: none; }
+  .tema { padding: 7px 10px; } .tema span { display: none; }
+  .navs { display: flex; width: 100%; gap: 4px; order: 3; }
+  .item { flex: 1 1 0; min-width: 0; justify-content: center; padding: 8px 6px; }
+  .item .ico, .item .txt small { display: none; }
+  .item .txt { flex: 0 1 auto; text-align: center; }
+  .item .txt b { font-size: 13px; }
+  .contenido { padding: 22px 16px 80px; min-width: 0; }
+  h1 { font-size: 28px; }
+  .cifras { gap: 18px; } .cifra b { font-size: 24px; }
+  .rejilla { grid-template-columns: minmax(0, 1fr); }
+  .skill { grid-template-columns: 34px minmax(0, 1fr) 44px; gap: 6px 12px; }
+  .skill > :nth-child(3), .skill > :nth-child(4) { grid-column: 2 / 4; }
+  .skill > .interruptor { grid-column: 3; grid-row: 1; }
+  .fila-art { grid-template-columns: 34px minmax(0,1fr) auto 32px; padding: 12px 14px; }
+  .fila-art > .etq { display: none; }
+}
+@media (min-width: 861px) { .navs { display: contents; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function () {
+  'use strict';
+  var D = window.PLATAFORMA || {};
+  var PASOS = [
+    { id: 'conectores', nivel: 'Nivel 1', titulo: 'Conectores', icono: 'enchufe', h1: 'Tus conectores', sub: 'Lo que Claude puede usar por ti. Cada servicio, con sus cuentas: cuál funciona, de qué tipo es y con qué cuenta entra.' },
+    { id: 'skills', nivel: 'Nivel 2', titulo: 'Skills y rutinas', icono: 'rayo', h1: 'Tus skills', sub: 'Lo que Claude sabe hacer como tú lo haces. Enciende o apaga cada una y prográmala para que se lance sola.' },
+    { id: 'apps', nivel: 'Nivel 4', titulo: 'Apps', icono: 'rejilla', h1: 'Tus apps', sub: 'Las herramientas con pantalla que tienes. Los artefactos que vaya creando Claude también se guardan aquí.' }
+  ];
+  var ICONOS = {
+    enchufe: '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0V8zM12 17v4"/>',
+    rayo: '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/>',
+    rejilla: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+    candado: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+    flecha: '<path d="M7 17 17 7M8 7h9v9"/>',
+    sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/>',
+    luna: '<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
+    reloj: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    evento: '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/>',
+    puntos: '<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>',
+    lapiz: '<path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/>',
+    play: '<path d="M8 5.5v13l11-6.5-11-6.5z"/>',
+    cadena: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+    sobre: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/>',
+    lupa: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
+    copiar: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/>',
+    mas: '<path d="M12 5v14M5 12h14"/>',
+    panel: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/>',
+    bandeja: '<path d="M3 13h5l1.5 3h5L16 13h5"/><path d="M5 5h14l2 8v6H3v-6l2-8z"/>',
+    calendario: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    llave: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M15 8l2 2"/>',
+    personas: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
+    casa: '<path d="M3 11 12 4l9 7M5 9.5V20h14V9.5"/>',
+    birrete: '<path d="M2 9l10-5 10 5-10 5L2 9z"/><path d="M6 11v5c3 2 9 2 12 0v-5M22 9v5"/>',
+    libro: '<path d="M4 5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2V5z"/><path d="M4 19a2 2 0 0 1 2-2h14"/>',
+    taza: '<path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8zM17 10h1.5a2.5 2.5 0 0 1 0 5H17M8 3v2M12 3v2"/>',
+    diapositivas: '<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M12 16v4M8 20h8"/>',
+    megafono: '<path d="M3 10v4h4l8 4V6L7 10H3zM18 9a4 4 0 0 1 0 6"/>',
+    tarjeta: '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h3"/>',
+    movil: '<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/>',
+    robot: '<rect x="5" y="8" width="14" height="11" rx="2"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16.5h5M3 12v3M21 12v3"/>',
+    euro: '<path d="M17 6.5A7 7 0 1 0 17 17.5M4 10h10M4 14h10"/>',
+    mapa: '<path d="m9 4-6 2.5v14L9 18l6 2.5 6-2.5v-14L15 6.5 9 4zM9 4v14M15 6.5v14"/>',
+    documento: '<path d="M6 3h9l4 4v14H6V3z"/><path d="M14 3v5h5M9 12h7M9 16h5"/>',
+    grafico: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    globo: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>',
+    chat: '<path d="M4 5h16v11H9l-5 4V5z"/>',
+    diana: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+    app: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 12h6M12 9v6"/>',
+    carpeta: '<path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5v-12z"/>',
+    camara: '<path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'
+  };
+  var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  var EVENTOS = ['Al terminar una reunión', 'Al terminar una reunión con un cliente', 'Al llegar un correo nuevo', 'Al entrar un contacto nuevo en el CRM', 'Al subir un archivo a una carpeta'];
+  var LOGO_CDN = 'https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/';
+
+  // ---------- utilidades ----------
+  function svg(nombre, cls) {
+    var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor');
+    s.setAttribute('stroke-width', '1.7'); s.setAttribute('stroke-linecap', 'round'); s.setAttribute('stroke-linejoin', 'round');
+    if (cls) s.setAttribute('class', cls);
+    s.innerHTML = ICONOS[nombre] || '';   // solo trazos fijos de este fichero, nunca datos
+    return s;
+  }
+  function h(tag, attrs, hijos) {
+    var e = document.createElement(tag);
+    for (var k in (attrs || {})) {
+      var v = attrs[k];
+      if (v === null || v === undefined || v === false) continue;
+      if (k === 'class') e.className = v;
+      else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), v);
+      else e.setAttribute(k, v === true ? '' : v);
+    }
+    [].concat(hijos === undefined ? [] : hijos).forEach(function (c) {
+      if (c === null || c === undefined || c === false) return;
+      e.appendChild(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(String(c)) : c);
+    });
+    return e;
+  }
+  function seguro(url) { return /^https?:\/\//i.test(url || '') ? url : null; }
+  function inicial(t) { return (String(t || '?').replace(/[^\p{L}\p{N}]/gu, '').charAt(0) || '?').toUpperCase(); }
+  // Logo: la marca en monocromo (simple-icons) si hay `logo`; si no, el emoji de `icono`; si no, la inicial.
+  function logo(obj, peq) {
+    var caja = h('div', { class: 'logo' + (peq ? ' peq' : '') });
+    var reserva = obj.icono || inicial(obj.servicio || obj.nombre || obj.titulo);
+    if (obj.logo && /^[a-z0-9]+$/.test(obj.logo)) {
+      var img = h('img', { src: LOGO_CDN + obj.logo + '.svg', alt: '', loading: 'lazy' });
+      img.addEventListener('error', function () { caja.textContent = reserva; });
+      caja.appendChild(img);
+    } else caja.textContent = reserva;
+    return caja;
+  }
+  // Apps y artefactos: el logo de su marca si lo tiene (`logo`), su propia imagen (`imagen`) o un icono plano (`figura`). Nunca emoji.
+  var PISTAS = [[/calend|reuni|agenda/i, 'calendario'], [/mapa|callejero|ruta/i, 'mapa'], [/crm|contact|cliente|equipo/i, 'personas'], [/finanz|precio|oferta|cobro|factura|€/i, 'euro'],
+    [/diapo|deck|presenta|clase|curso/i, 'diapositivas'], [/whatsapp|chat|mensaje/i, 'chat'], [/vision|objetiv|meta/i, 'diana'], [/panel|dashboard|métric|gráfic|cifras/i, 'grafico'],
+    [/landing|web|página/i, 'globo'], [/informe|análisis|investig|guía|plan|document|arquitect/i, 'documento']];
+  function figuraDe(a) {
+    if (a.figura && ICONOS[a.figura]) return a.figura;
+    if (a.tipo === 'móvil') return 'movil';
+    var t = (a.nombre || '') + ' ' + (a.para || '');
+    for (var i = 0; i < PISTAS.length; i++) if (PISTAS[i][0].test(t)) return PISTAS[i][1];
+    return a.tipo === 'artefacto' ? 'documento' : 'app';
+  }
+  function logoApp(a, peq) {
+    if (a.logo) return logo({ logo: a.logo, icono: '' , nombre: a.nombre }, peq);
+    var caja = h('div', { class: 'logo plano' + (peq ? ' peq' : '') });
+    if (a.imagen && (seguro(a.imagen) || /^data:image\//.test(a.imagen))) {
+      var img = h('img', { src: a.imagen, alt: '', class: 'propia' });
+      img.addEventListener('error', function () { caja.textContent = ''; caja.appendChild(svg(figuraDe(a))); });
+      caja.appendChild(img);
+    } else caja.appendChild(svg(figuraDe(a)));
+    return caja;
+  }
+  // El botón de cada app: su enlace; si no, abrirla en el ordenador con el puente (app de escritorio o carpeta); si es del móvil, dónde está.
+  function accionApp(a) {
+    var u = seguro(a.url);
+    if (u) return h('a', { class: 'btn', href: u, target: '_blank', rel: 'noopener' }, ['Abrir', svg('flecha')]);
+    if (a.abrir) {
+      var esApp = /\.(app|exe|lnk)\/?$/i.test(a.abrir);
+      return h('button', { class: 'btn', title: a.abrir, onclick: function () {
+        if (!puente) return sinPuente();
+        api('/api/abrir', { nombre: a.nombre }).then(function () { avisar('Abriendo ' + a.nombre); }).catch(function (e) { avisar('No se ha podido abrir: ' + e.message); });
+      } }, [esApp ? 'Abrir' : 'Abrir carpeta', svg(esApp ? 'flecha' : 'carpeta')]);
+    }
+    if (a.tipo === 'móvil') return h('span', { class: 'etq' }, [svg('movil'), 'En tu móvil']);
+    return null;
+  }
+  function uid() { return Math.random().toString(36).slice(2, 9); }
+
+  // ---------- datos (admite también la forma antigua) ----------
+  D.marca = D.marca || {};
+  D.desbloqueado = Object.assign({ conectores: false, skills: false, apps: false }, D.desbloqueado || {});
+  D.conectores = (D.conectores || []).map(function (c) {
+    if (c.cuentas) return c;
+    return { servicio: c.nombre, logo: c.logo, icono: c.icono, para: c.para, cuentas: [{ cuenta: c.cuenta || '', tipo: c.tipo, estado: c.estado }] };
+  });
+  D.skills = D.skills || []; D.rutinas = D.rutinas || []; D.apps = D.apps || []; D.areas = D.areas || {};
+  D.rutinas.forEach(function (r) {
+    if (!r.id) r.id = uid();
+    if (r.activa === undefined) r.activa = true;
+    if (!r.disparador) r.disparador = { tipo: /evento|al terminar|cuando /i.test(r.cuando || '') ? 'evento' : 'hora', texto: r.cuando || '' };
+  });
+  D.apps.forEach(function (a) { if (!a.id) a.id = uid(); });
+  D.quitadas = D.quitadas || [];
+  function tit(s) { return s ? (s.titulo || s.nombre) : ''; }
+  function skillPorNombre(n) { return D.skills.filter(function (x) { return x.nombre === n; })[0]; }
+
+  // ---------- estado ----------
+  var params = new URLSearchParams(location.search);
+  var desb = Object.assign({}, D.desbloqueado);
+  if (params.has('desbloqueado')) {   // vista previa: ?desbloqueado=conectores,skills
+    var lista = params.get('desbloqueado').split(',');
+    PASOS.forEach(function (p) { desb[p.id] = lista.indexOf(p.id) >= 0; });
+  }
+  var actual = params.get('pestana') || (location.hash || '').replace('#', '');
+  if (!PASOS.some(function (p) { return p.id === actual; })) actual = (PASOS.filter(function (p) { return desb[p.id]; })[0] || PASOS[0]).id;
+  var filtroCon = 'todos', filtroApps = params.get('artefactos') === '1' ? 'artefactos' : 'apps';
+  var puente = false, pendientes = 0, listaCambios = [], carpeta = '', busca = '';
+  var tema = 'claro';
+  try { tema = localStorage.getItem('plataforma-tema') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro'); } catch (e) {}
+  if (params.get('tema')) tema = params.get('tema');
+  function aplicarTema() { document.documentElement.setAttribute('data-tema', tema); try { localStorage.setItem('plataforma-tema', tema); } catch (e) {} }
+  function aplicarMarca() {
+    var r = document.documentElement.style, M = D.marca;
+    if (M.acento) r.setProperty('--marca', M.acento);
+    document.title = M.nombre || 'Tu plataforma';
+  }
+
+  // ---------- puente local (servidor.mjs) ----------
+  function api(ruta, cuerpo) {
+    return fetch(ruta, { method: cuerpo ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json' }, body: cuerpo ? JSON.stringify(cuerpo) : undefined })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || r.status); return j; }); });
+  }
+  function comprobarPuente() {
+    if (location.protocol === 'file:') return;
+    api('/api/estado').then(function (j) { puente = true; listaCambios = j.lista || []; pendientes = listaCambios.length; carpeta = j.carpeta || ''; pintar(); }).catch(function () {});
+  }
+
+  // ---------- copiar a Claude: lo que solo puede hacer Claude se le pasa en un texto listo para pegar ----------
+  function dondeEsta() { return carpeta ? 'mi plataforma de 6 Grados (carpeta ' + carpeta + ')' : 'mi plataforma de 6 Grados (mi carpeta «Plataforma»)'; }
+  function copiarAClaude(texto, aviso) {
+    window.ultimoCopiado = texto;                        // para comprobarlo en pruebas
+    function aMano() {
+      var t = h('textarea', { style: 'position:fixed;top:0;left:0;opacity:0', 'aria-hidden': 'true' }); t.value = texto;
+      document.body.appendChild(t); t.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (e) {} t.remove(); return ok;
+    }
+    var p = navigator.clipboard && window.isSecureContext ? navigator.clipboard.writeText(texto) : Promise.reject();
+    p.catch(function () { if (!aMano()) throw new Error('no'); })
+      .then(function () { avisar(aviso || 'Copiado. Pégalo en un chat de Claude'); }, function () { avisar('No he podido copiarlo. Inténtalo otra vez.'); });
+  }
+  function fraseDisparador(d) {
+    if (!d) return '';
+    if (d.tipo === 'correo') return 'que revise mi correo cada hora y, cuando llegue uno que ' + d.condicion + ', se lance';
+    if (d.tipo === 'skill') return 'que se lance cuando termine la skill `' + d.skill + '`';
+    return (d.texto || '').charAt(0).toLowerCase() + (d.texto || '').slice(1) + (d.cron ? ' (cron ' + d.cron + ')' : '');
+  }
+  function describirCambio(c) {
+    var nom = '«' + (c.nombre || c.skill || '') + '»';
+    switch (c.que) {
+      case 'cambiar-disparador': return 'Cambia cuándo se lanza la tarea programada ' + nom + ': ' + fraseDisparador(c.disparador) + '.';
+      case 'activar-tarea': return 'Vuelve a poner en marcha la tarea programada ' + nom + '.';
+      case 'pausar-tarea': return 'Pausa la tarea programada ' + nom + '.';
+      case 'crear-tarea-programada':
+        if (c.disparador && c.disparador.tipo === 'skill') return 'Cuando termine la skill `' + c.disparador.skill + '`, que lance ' + (c.skill ? 'la skill `' + c.skill + '`' : 'esto: ' + c.texto) + '. Añádelo como último paso de `' + c.disparador.skill + '`.';
+        var hace = c.skill ? 'use la skill `' + c.skill + '`' : 'haga esto: ' + c.texto;
+        if (c.disparador && c.disparador.tipo === 'correo') return 'Crea una tarea programada que revise mi correo cada hora y, cuando llegue uno que ' + c.disparador.condicion + ', ' + hace + '. Si no llega ninguno así, que no haga nada.';
+        if (c.disparador && c.disparador.tipo === 'hora') return 'Crea una tarea programada que se lance ' + fraseDisparador(c.disparador) + ' y ' + hace + '.';
+        return 'Crea una rutina que se lance ' + fraseDisparador(c.disparador) + ' y ' + hace + '.';
+      case 'encadenar-skill': return 'Cuando termine la skill `' + c.skill + '`, que lance ' + (c.despues ? 'la skill `' + c.despues + '`' : 'lo que te digo') + (c.texto ? ' (' + c.texto + ')' : '') + '. Añádelo como último paso de su SKILL.md.';
+      case 'quitar-encadenado': return 'Quita del final de la skill `' + c.skill + '` que lance ' + (c.despues ? '`' + c.despues + '`' : 'otra skill') + (c.texto ? ' (' + c.texto + ')' : '') + '.';
+      default: return 'Cambio «' + c.que + '»: ' + JSON.stringify(c);
+    }
+  }
+  function textoCambios(lista) {
+    return 'Aplica estos cambios de ' + dondeEsta() + '. Sigue su INSTRUCCIONES.md:\n' +
+      lista.map(function (c, i) { return (i + 1) + '. ' + describirCambio(c); }).join('\n') +
+      '\n\nCuando acabes, marca cada uno como hecho en cambios.json, quita «pendiente» en datos.js y dime en una línea qué has aplicado.';
+  }
+  function copiarCambios() {              // sin esperas: el portapapeles necesita el clic del momento
+    if (!listaCambios.length) return avisar('No hay nada por aplicar.');
+    copiarAClaude(textoCambios(listaCambios), 'Copiado. Pégalo en un chat de Claude y él lo aplica');
+  }
+  function guardar() { if (puente) api('/api/guardar', { datos: D }).catch(function (e) { avisar('No se ha podido guardar: ' + e.message); }); }
+  function apuntarCambio(c) {
+    if (!puente) return;
+    api('/api/cambio', { cambio: c }).then(function (j) { listaCambios = j.lista || []; pendientes = listaCambios.length; pintar(); }).catch(function () {});
+  }
+  function sinPuente() { avisar('Para cambiar cosas, abre la plataforma con «Abrir plataforma» (doble clic) en su carpeta.'); }
+
+  // ---------- aviso con deshacer ----------
+  var avisoT;
+  function avisar(texto, deshacer) {
+    var viejo = document.querySelector('.aviso'); if (viejo) viejo.remove();
+    var a = h('div', { class: 'aviso', role: 'status' }, [texto, deshacer ? h('button', { onclick: function () { a.remove(); deshacer(); } }, 'Deshacer') : null]);
+    document.body.appendChild(a);
+    clearTimeout(avisoT); avisoT = setTimeout(function () { a.remove(); }, deshacer ? 6000 : 3500);
+  }
+
+  // ---------- menú flotante ----------
+  function cerrarMenus() { document.querySelectorAll('.menu-flot').forEach(function (m) { m.remove(); }); }
+  document.addEventListener('click', function (e) { if (!e.target.closest('.menu-flot') && !e.target.closest('.mas') && !e.target.closest('.marca-logo')) cerrarMenus(); });
+  function menuFlot(boton, opciones) {
+    cerrarMenus();
+    var r = boton.getBoundingClientRect();
+    var m = h('div', { class: 'menu-flot', role: 'menu' }, opciones.map(function (o) {
+      return h('button', { class: o.peligro ? 'peligro' : '', role: 'menuitem', onclick: function () { cerrarMenus(); o.accion(); } }, o.texto);
+    }));
+    m.style.top = (window.scrollY + r.bottom + 6) + 'px';
+    m.style.left = Math.max(12, Math.min(window.scrollX + r.right - 210, window.scrollX + document.documentElement.clientWidth - 222)) + 'px';
+    document.body.appendChild(m);
+  }
+
+  // ---------- diálogo ----------
+  function dialogo(contenido) {
+    var velo = h('div', { class: 'velo', onclick: function (e) { if (e.target === velo) velo.remove(); } });
+    velo.appendChild(h('div', { class: 'dialogo', role: 'dialog', 'aria-modal': 'true' }, contenido(function () { velo.remove(); })));
+    document.body.appendChild(velo);
+    var f = velo.querySelector('select, input, button.principal'); if (f) f.focus();
+    velo.addEventListener('keydown', function (e) { if (e.key === 'Escape') velo.remove(); });
+  }
+  // Horario de una rutina: a una hora fija (cada día, de lunes a viernes, cada semana) o cada cierto tiempo (cada hora, cada pocos minutos), con franja opcional.
+  var HORARIO_OPC = [['dia', 'Cada día'], ['laborables', 'De lunes a viernes'], ['semana', 'Cada semana'], ['cada-hora', 'Cada hora'], ['minutos', 'Por minutos']];
+  function hhmm(t) { var q = String(t).split(':'); return ('0' + q[0]).slice(-2) + ':' + q[1]; }
+  function sinCero(t) { return String(t).replace(/^0(\d)/, '$1'); }
+  function leerHorario(p) {
+    var x = { f: 'dia', dia: 1, hora: '09:00', cada: 30, dias: 'todos', desde: '', hasta: '' };
+    if (!p || p.tipo !== 'hora') return x;
+    if (p.frecuencia) { x.f = p.frecuencia; ['dia', 'hora', 'cada', 'dias', 'desde', 'hasta'].forEach(function (k) { if (p[k] !== undefined && p[k] !== null) x[k] = p[k]; }); return x; }
+    var t = (p.texto || '').toLowerCase(), m;          // datos viejos: se entiende la frase
+    if ((m = t.match(/cada (\d+) minutos/))) { x.f = 'minutos'; x.cada = +m[1]; }
+    else if (/cada hora/.test(t)) x.f = 'cada-hora';
+    else if ((m = t.match(/cada (domingo|lunes|martes|miércoles|jueves|viernes|sábado)/))) { x.f = 'semana'; x.dia = DIAS.indexOf(m[1]); }
+    else if (/lunes a viernes/.test(t)) x.f = 'laborables';
+    if (/lunes a viernes/.test(t) && (x.f === 'minutos' || x.f === 'cada-hora')) x.dias = 'laborables';
+    if ((m = t.match(/de (\d{1,2}:\d\d) a (\d{1,2}:\d\d)/))) { x.desde = hhmm(m[1]); x.hasta = hhmm(m[2]); }
+    if ((m = t.match(/a las (\d{1,2}:\d\d)/))) x.hora = hhmm(m[1]);
+    return x;
+  }
+  function seRepite(x) { return x.f === 'minutos' || x.f === 'cada-hora'; }
+  function textoHorario(x) {
+    if (seRepite(x)) {
+      var fr = (x.f === 'minutos' ? 'Cada ' + x.cada + ' minutos' : 'Cada hora') + (x.dias === 'laborables' ? ' de lunes a viernes' : '');
+      return x.desde && x.hasta ? fr + ', de ' + sinCero(x.desde) + ' a ' + sinCero(x.hasta) : fr;
+    }
+    if (x.f === 'laborables') return 'De lunes a viernes a las ' + sinCero(x.hora);
+    if (x.f === 'semana') return 'Cada ' + DIAS[x.dia] + ' a las ' + sinCero(x.hora);
+    return 'Cada día a las ' + sinCero(x.hora);
+  }
+  function cronHorario(x) {
+    var p = x.hora.split(':'), m = +p[1] || 0, hh = +p[0] || 0;
+    if (seRepite(x)) {
+      var horas = '*';
+      if (x.desde && x.hasta) { var a = +x.desde.split(':')[0], b = +x.hasta.split(':')[0]; if (+x.hasta.split(':')[1] === 0) b -= 1; horas = a + '-' + Math.max(a, b); }
+      return (x.f === 'minutos' ? '*/' + x.cada : '0') + ' ' + horas + ' * * ' + (x.dias === 'laborables' ? '1-5' : '*');
+    }
+    if (x.f === 'laborables') return m + ' ' + hh + ' * * 1-5';
+    if (x.f === 'semana') return m + ' ' + hh + ' * * ' + x.dia;
+    return m + ' ' + hh + ' * * *';
+  }
+  function editarDisparador(titulo, previo, alGuardar, excluir) {
+    var tipo = previo && previo.tipo === 'evento' ? 'evento' : 'hora';
+    var x = leerHorario(previo);
+    // «Cuando pasa algo» tiene tres clases: llega un correo que…, termina otra skill, u otra cosa (lista o texto libre).
+    var clase = previo && previo.tipo === 'skill' ? 'skill' : previo && previo.tipo === 'evento' ? 'otro' : 'correo';
+    if (previo && (previo.tipo === 'correo' || previo.tipo === 'skill' || previo.tipo === 'evento')) tipo = 'evento';
+    var cond = (previo && previo.condicion) || '', trasSkill = (previo && previo.skill) || '';
+    var ev = (previo && previo.tipo === 'evento' && previo.texto) || EVENTOS[0];
+    var opciones = D.skills.filter(function (s) { return s.nombre !== excluir; });
+    dialogo(function (cerrar) {
+      var cont = h('div', { style: 'display:flex;flex-direction:column;gap:14px' });
+      function texto() {
+        if (tipo === 'hora') return textoHorario(x);
+        if (clase === 'correo') return 'Al llegar un correo que ' + (cond || '…');
+        if (clase === 'skill') return 'Al terminar «' + (tit(skillPorNombre(trasSkill)) || '…') + '»';
+        return ev;
+      }
+      function dibujar() {
+        cont.textContent = '';
+        cont.appendChild(h('div', {}, h('div', { class: 'segmento' }, [
+          h('button', { class: tipo === 'hora' ? 'on' : '', onclick: function () { tipo = 'hora'; dibujar(); } }, 'Con horario'),
+          h('button', { class: tipo === 'evento' ? 'on' : '', onclick: function () { tipo = 'evento'; dibujar(); } }, 'Cuando pasa algo')
+        ])));
+        if (tipo === 'hora') {
+          var fila = h('div', { class: 'fila2' }, [h('label', {}, ['Cuándo', h('select', { onchange: function () { x.f = this.value; dibujar(); } }, HORARIO_OPC.map(function (o) { return h('option', { value: o[0], selected: o[0] === x.f }, o[1]); }))])]);
+          if (x.f === 'semana') fila.appendChild(h('label', {}, ['Qué día', h('select', { onchange: function () { x.dia = +this.value; dibujar(); } }, [1, 2, 3, 4, 5, 6, 0].map(function (d) { return h('option', { value: d, selected: d === x.dia }, DIAS[d].charAt(0).toUpperCase() + DIAS[d].slice(1)); }))]));
+          if (x.f === 'minutos') fila.appendChild(h('label', {}, ['Cada cuánto', h('select', { onchange: function () { x.cada = +this.value; dibujar(); } }, [5, 10, 15, 30].map(function (n) { return h('option', { value: n, selected: n === x.cada }, n + ' minutos'); }))]));
+          if (!seRepite(x)) fila.appendChild(h('label', {}, ['A qué hora', h('input', { type: 'time', value: x.hora, onchange: function () { x.hora = this.value || '09:00'; dibujar(); } })]));
+          cont.appendChild(fila);
+          if (seRepite(x)) {
+            cont.appendChild(h('div', { class: 'fila3' }, [
+              h('label', {}, ['Qué días', h('select', { onchange: function () { x.dias = this.value; dibujar(); } }, [['todos', 'Todos los días'], ['laborables', 'De lunes a viernes']].map(function (o) { return h('option', { value: o[0], selected: o[0] === x.dias }, o[1]); }))]),
+              h('label', {}, ['Desde', h('input', { type: 'time', value: x.desde, onchange: function () { x.desde = this.value; if (x.desde && !x.hasta) x.hasta = '20:00'; dibujar(); } })]),
+              h('label', {}, ['Hasta', h('input', { type: 'time', value: x.hasta, onchange: function () { x.hasta = this.value; if (x.hasta && !x.desde) x.desde = '08:00'; dibujar(); } })])
+            ]));
+            cont.appendChild(h('p', {}, x.desde && x.hasta ? 'Solo dentro de esa franja.' : 'Sin «Desde» y «Hasta», a cualquier hora.'));
+          }
+        } else {
+          cont.appendChild(h('label', {}, ['Qué tiene que pasar', h('select', { onchange: function () { clase = this.value; dibujar(); } }, [['correo', '✉️ Llega un correo que…'], ['skill', '🔗 Termina otra skill'], ['otro', '⚡ Otra cosa']].map(function (o) { return h('option', { value: o[0], selected: o[0] === clase }, o[1]); }))]));
+          if (clase === 'correo') {
+            var ic = h('input', { type: 'text', value: cond, placeholder: 'pide una factura', oninput: function () { cond = this.value.trim(); resumen.lastChild.textContent = texto(); } });
+            cont.appendChild(h('label', {}, ['Qué tiene el correo', ic]));
+            cont.appendChild(h('p', {}, 'Claude revisa tu correo cada hora y, si llega uno así, lanza la skill.'));
+          } else if (clase === 'skill') {
+            cont.appendChild(h('label', {}, ['Cuál', h('select', { onchange: function () { trasSkill = this.value; dibujar(); } }, [h('option', { value: '' }, 'Elige una skill…')].concat(opciones.map(function (s) { return h('option', { value: s.nombre, selected: s.nombre === trasSkill }, (s.icono ? s.icono + ' ' : '') + tit(s)); })))]));
+          } else {
+            var lista = EVENTOS.indexOf(ev) >= 0 ? EVENTOS : EVENTOS.concat([ev]);
+            cont.appendChild(h('label', {}, ['Cuál', h('select', { onchange: function () { ev = this.value; dibujar(); } }, lista.map(function (o) { return h('option', { value: o, selected: o === ev }, o); }))]));
+            cont.appendChild(h('label', {}, ['O escríbelo tú', h('input', { type: 'text', placeholder: 'Al subir una foto a mi carpeta de tickets', onchange: function () { if (this.value.trim()) { ev = this.value.trim(); dibujar(); } } })]));
+          }
+        }
+        var resumen = h('div', { class: 'resumen' }, [svg(tipo === 'hora' ? 'reloj' : clase === 'correo' ? 'sobre' : clase === 'skill' ? 'cadena' : 'evento'), h('span', {}, texto())]);
+        cont.appendChild(resumen);
+      }
+      dibujar();
+      return [h('h3', {}, titulo), cont, h('p', {}, 'Se guarda al momento. Para que Claude lo aplique, pulsa «Copiar a Claude» y pégalo en un chat.'),
+        h('div', { class: 'acciones' }, [
+          h('button', { class: 'btn suave', onclick: cerrar }, 'Cancelar'),
+          h('button', { class: 'btn principal', onclick: function () {
+            var d;
+            if (tipo === 'hora') d = { tipo: 'hora', texto: texto(), frecuencia: x.f, dia: x.dia, hora: x.hora, cada: x.cada, dias: x.dias, desde: x.desde, hasta: x.hasta, cron: cronHorario(x) };
+            else if (clase === 'correo') { if (!cond) return avisar('Escribe qué tiene que tener el correo'); d = { tipo: 'correo', condicion: cond, texto: texto(), cron: '0 * * * *' }; }
+            else if (clase === 'skill') { if (!trasSkill) return avisar('Elige la skill'); d = { tipo: 'skill', skill: trasSkill, texto: texto() }; }
+            else d = { tipo: 'evento', texto: ev };
+            cerrar(); alGuardar(d);
+          } }, 'Guardar')
+        ])];
+    });
+  }
+
+  // ---------- pantallas ----------
+  function bloqueada(p) {
+    return h('div', { class: 'bloqueo' }, [
+      h('div', { class: 'grande' }, svg('candado')),
+      h('h2', {}, 'Esta pestaña aún está bloqueada'),
+      h('p', {}, 'Se abre cuando pegues en Claude el prompt de este apartado. Él la monta con lo que tú tienes y te la enseña.'),
+      h('div', { class: 'prompt-nombre' }, (D.prompts || {})[p.id] || p.titulo),
+      h('a', { class: 'btn', href: 'https://6g-clientes.vercel.app/#/prompts', target: '_blank', rel: 'noopener' }, ['Copiar el prompt', svg('flecha')])
+    ]);
+  }
+
+  // Imagen de perfil (arriba a la izquierda): se elige un archivo, se reduce a 160 px y se guarda dentro de datos.js.
+  function imagenMarca(M) { return M.logo && (seguro(M.logo) || /^data:image\/(png|jpe?g|webp|gif);base64,/.test(M.logo)); }
+  function menuImagen(boton) {
+    if (!puente) return sinPuente();
+    var M = D.marca;
+    if (!imagenMarca(M)) return elegirImagen();
+    menuFlot(boton, [{ texto: 'Cambiar la imagen', accion: elegirImagen }, { texto: 'Quitar la imagen', accion: function () {
+      var antes = M.logo; M.logo = ''; guardar(); pintar(); avisar('Imagen quitada', function () { M.logo = antes; guardar(); pintar(); });
+    } }]);
+    var m = document.querySelector('.menu-flot'), r = boton.getBoundingClientRect(); if (m) m.style.left = (window.scrollX + r.left) + 'px';
+  }
+  function elegirImagen() {
+    var inp = h('input', { type: 'file', accept: 'image/*', style: 'display:none' });
+    inp.addEventListener('change', function () {
+      var f = inp.files && inp.files[0]; inp.remove(); if (!f) return;
+      var lector = new FileReader();
+      lector.onload = function () {
+        var img = new Image();
+        img.onload = function () {
+          var lado = 160, c = document.createElement('canvas'); c.width = c.height = lado;
+          var k = Math.max(lado / img.width, lado / img.height), w = img.width * k, hh = img.height * k;
+          c.getContext('2d').drawImage(img, (lado - w) / 2, (lado - hh) / 2, w, hh);
+          var antes = D.marca.logo; D.marca.logo = c.toDataURL('image/png'); guardar(); pintar();
+          avisar('Imagen cambiada', function () { D.marca.logo = antes; guardar(); pintar(); });
+        };
+        img.onerror = function () { avisar('Esa imagen no se puede abrir'); };
+        img.src = lector.result;
+      };
+      lector.readAsDataURL(f);
+    });
+    document.body.appendChild(inp); inp.click();
+  }
+
+  // Renombrar una cuenta: el nombre que elige el cliente va en `alias`; `cuenta` sigue siendo el dato real.
+  function renombrarCuenta(c, nodo) {
+    if (!puente) return sinPuente();
+    var antes = c.alias, hecho = false;
+    var inp = h('input', { class: 'renombrar', type: 'text', value: c.alias || c.cuenta || '', 'aria-label': 'Nombre de la cuenta', maxlength: 60 });
+    nodo.replaceWith(inp); inp.focus(); inp.select();
+    function fin(guardarlo) {
+      if (hecho) return; hecho = true;
+      var v = inp.value.trim();
+      if (guardarlo && v && v !== (c.alias || c.cuenta)) {
+        if (v === c.cuenta) delete c.alias; else c.alias = v;
+        guardar(); pintar();
+        avisar('Ahora se llama «' + v + '»', function () { if (antes) c.alias = antes; else delete c.alias; guardar(); pintar(); });
+      } else pintar();
+    }
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') fin(true); else if (e.key === 'Escape') fin(false); });
+    inp.addEventListener('blur', function () { fin(true); });
+  }
+
+  function vistaConectores() {
+    var ss = D.conectores;
+    if (!ss.length) return h('div', { class: 'vacio' }, 'Todavía no hay conectores. Pídele a Claude que revise los que tienes y los añada.');
+    var cuentas = [].concat.apply([], ss.map(function (s) { return s.cuentas; }));
+    var mal = cuentas.filter(function (c) { return c.estado !== 'ok'; }).length;
+    var etq = { ok: 'Funciona', falla: 'Falla', pendiente: 'Sin comprobar' };
+    var vis = ss.filter(function (s) {
+      if (filtroCon === 'todos') return true;
+      return filtroCon === 'problemas' ? s.cuentas.some(function (c) { return c.estado !== 'ok'; }) : s.cuentas.length > 1;
+    });
+    return h('div', {}, [
+      h('div', { class: 'cifras' }, [
+        h('div', { class: 'cifra' }, [h('b', {}, ss.length), h('span', {}, 'servicios')]),
+        h('div', { class: 'cifra' }, [h('b', {}, cuentas.length), h('span', {}, 'cuentas conectadas')]),
+        h('div', { class: 'cifra' + (mal ? ' mal' : '') }, [h('b', {}, mal), h('span', {}, 'por revisar')])
+      ]),
+      h('div', { class: 'barra' }, h('div', { class: 'segmento' }, [['todos', 'Todos'], ['varias', 'Con varias cuentas'], ['problemas', 'Por revisar']].map(function (o) {
+        return h('button', { class: filtroCon === o[0] ? 'on' : '', onclick: function () { filtroCon = o[0]; pintar(); } }, o[1]);
+      }))),
+      vis.length ? h('div', { class: 'rejilla' }, vis.map(function (s) {
+        return h('div', { class: 'tarjeta servicio' }, [
+          h('div', { class: 'cab' }, [logo(s), h('div', { style: 'min-width:0' }, [h('h3', {}, s.servicio), h('p', {}, s.para || '')])]),
+          h('div', { class: 'cuentas' }, [h('div', { class: 'n-cuentas' }, s.cuentas.length > 1 ? s.cuentas.length + ' cuentas' : '1 cuenta')].concat(s.cuentas.map(function (c) {
+            var est = c.estado || 'pendiente', nombre = c.alias || c.cuenta || 'Cuenta';
+            var b = h('b', { title: c.alias ? 'Cuenta: ' + c.cuenta : nombre }, nombre);
+            return h('div', { class: 'cuenta' }, [
+              h('div', { class: 'avatar', title: c.cuenta }, inicial(nombre)),
+              h('div', { style: 'min-width:0' }, [b, h('small', {}, [h('i', { class: 'punto ' + est }), etq[est] || est])]),
+              c.tipo ? h('span', { class: 'etq' }, c.tipo) : h('span'),
+              h('button', { class: 'mas', 'aria-label': 'Cambiar el nombre de ' + nombre, title: 'Cambiar el nombre', onclick: function () { renombrarCuenta(c, b); } }, svg('lapiz'))
+            ]);
+          })))
+        ]);
+      })) : h('div', { class: 'vacio' }, filtroCon === 'problemas' ? 'Todo funciona. Nada por revisar.' : 'Ningún servicio con varias cuentas.')
+    ]);
+  }
+
+  function cambiarSkill(s, valor) {
+    if (!puente) return sinPuente();
+    s.activada = valor; pintar();                         // al momento; se guarda por detrás
+    api('/api/skill', { nombre: s.nombre, activada: valor }).then(function (j) {
+      if (j.ruta) s.ruta = j.ruta;
+      avisar((valor ? 'Encendida: ' : 'Apagada: ') + (s.titulo || s.nombre), function () { cambiarSkill(s, !valor); });
+    }).catch(function (e) { s.activada = !valor; pintar(); avisar('No se ha podido: ' + e.message); });
+  }
+  // Programar: crea una rutina que lanza una skill (o lo que el cliente escriba) a una hora o cuando pasa algo.
+  function programarSkill(s, libre) {
+    if (!puente) return sinPuente();
+    editarDisparador(s ? 'Programar «' + tit(s) + '»' : '¿Cuándo se lanza?', null, function (disp) {
+      var r = { id: uid(), nombre: s ? tit(s) : libre, que: s ? (s.para || '') : libre, activa: true, disparador: disp, cuando: disp.texto, donde: 'en tu ordenador', skill: s ? s.nombre : null, pendiente: 'crear' };
+      D.rutinas.push(r); if (s) s.programada = disp.texto; guardar(); pintar();
+      apuntarCambio({ que: 'crear-tarea-programada', rutina: r.id, nombre: r.nombre, skill: r.skill, texto: s ? null : libre, disparador: disp });
+      avisar('Programada: ' + disp.texto);
+    }, s && s.nombre);
+  }
+  // Elegir una skill de la lista o decirlo con tus palabras. Lo usan «Nueva rutina» y «Al terminar…».
+  function elegirSkill(titulo, ayuda, previo, excluir, alElegir, extra) {
+    var elegida = (previo && previo.skill) || '', texto = (previo && previo.texto) || '';
+    dialogo(function (cerrar) {
+      var sel = h('select', { onchange: function () { elegida = this.value; } }, [h('option', { value: '' }, 'Elige una skill…')].concat(D.skills.filter(function (o) { return o.nombre !== excluir; }).map(function (o) {
+        return h('option', { value: o.nombre, selected: o.nombre === elegida }, (o.icono ? o.icono + ' ' : '') + tit(o));
+      })));
+      var inp = h('input', { type: 'text', value: texto, placeholder: 'Si es una factura, lanza la de enviar facturas', oninput: function () { texto = this.value; } });
+      return [h('h3', {}, titulo), h('label', {}, ['Una skill', sel]), h('label', {}, ['O dímelo con tus palabras', inp]), h('p', {}, ayuda),
+        h('div', { class: 'acciones' }, [extra ? extra(cerrar) : null,
+          h('button', { class: 'btn suave', onclick: cerrar }, 'Cancelar'),
+          h('button', { class: 'btn principal', onclick: function () {
+            if (!elegida && !texto.trim()) return avisar('Elige una skill o escríbelo');
+            cerrar(); alElegir(elegida, texto.trim());
+          } }, 'Siguiente')])];
+    });
+  }
+  function nuevaRutina() {
+    if (!puente) return sinPuente();
+    elegirSkill('Nueva rutina', 'Después eliges cuándo se lanza: a una hora o cuando pasa algo.', null, null, function (n, t) {
+      programarSkill(n ? skillPorNombre(n) : null, t);
+    });
+  }
+  // Encadenar: al terminar una skill, que se lance otra. Lo aplica Claude añadiendo el último paso a su SKILL.md.
+  function encadenarSkill(s) {
+    if (!puente) return sinPuente();
+    elegirSkill('Cuando termine «' + tit(s) + '»…', 'Claude lo añade como último paso de la skill cuando le pases los cambios.', s.despues, s.nombre, function (n, t) {
+      var antes = s.despues;
+      s.despues = { skill: n || null, texto: t || '', pendiente: true }; guardar(); pintar();
+      apuntarCambio({ que: 'encadenar-skill', skill: s.nombre, nombre: tit(s), despues: n || null, texto: t || '' });
+      avisar('Al terminar, lanzará ' + (n ? '«' + tit(skillPorNombre(n)) + '»' : 'lo que has escrito'), function () {
+        if (antes) s.despues = antes; else delete s.despues; guardar(); pintar();
+        apuntarCambio({ que: 'quitar-encadenado', skill: s.nombre, nombre: tit(s), despues: n || null, texto: t || '' });
+      });
+    }, s.despues ? function (cerrar) {
+      return h('button', { class: 'btn suave', style: 'margin-right:auto', onclick: function () {
+        var p = s.despues; cerrar(); delete s.despues; guardar(); pintar();
+        apuntarCambio({ que: 'quitar-encadenado', skill: s.nombre, nombre: tit(s), despues: p.skill, texto: p.texto });
+        avisar('Ya no lanza nada al terminar');
+      } }, 'Quitar');
+    } : null);
+  }
+  function ejecutarAhora(r) {
+    copiarAClaude('Ejecuta ahora la rutina «' + r.nombre + '» de ' + dondeEsta() + (r.skill ? ': usa la skill `' + r.skill + '`' : '') + (r.que && r.que !== r.nombre ? '. Lo que hace: ' + r.que : '') + '.',
+      'Copiado. Pégalo en Claude y la lanza ahora');
+  }
+  function vistaSkills() {
+    var ss = D.skills, rs = D.rutinas;
+    if (!ss.length && !rs.length) return h('div', { class: 'vacio' }, 'Todavía no hay skills. Pídele a Claude que revise las que tienes y las añada.');
+    var porArea = {}, orden = [];
+    ss.forEach(function (s) { var a = s.area || 'Otras'; if (!porArea[a]) { porArea[a] = []; orden.push(a); } porArea[a].push(s); });
+    var nodo = h('div', {}, [
+      h('div', { class: 'cifras' }, [
+        h('div', { class: 'cifra' }, [h('b', {}, ss.length), h('span', {}, 'skills')]),
+        h('div', { class: 'cifra' }, [h('b', {}, ss.filter(function (s) { return s.activada; }).length), h('span', {}, 'encendidas')]),
+        h('div', { class: 'cifra' }, [h('b', {}, rs.filter(function (r) { return r.activa; }).length), h('span', {}, 'rutinas en marcha')])
+      ]),
+      pendientes ? h('div', { class: 'banda' }, [h('i', { class: 'punto pendiente' }),
+        h('span', { class: 'txt' }, [h('b', {}, pendientes + (pendientes > 1 ? ' cambios por aplicar' : ' cambio por aplicar')), '. Están guardados; Claude los hace cuando se los pases.']),
+        h('button', { class: 'btn', onclick: copiarCambios }, [svg('copiar'), 'Copiar a Claude'])]) : null
+    ]);
+    orden.forEach(function (a) {
+      nodo.appendChild(h('div', { class: 'area' }, [
+        h('h2', {}, [D.areas[a] ? h('span', {}, D.areas[a]) : null, a, h('span', { class: 'n' }, porArea[a].length)]),
+        h('div', { class: 'tarjeta lista' }, porArea[a].map(function (s) {
+          var como = [];
+          if (s.palabras) { var t = s.palabras.replace(/^[«“"]|[»”"]$/g, ''); como.push(h('span', { class: 'etq', title: t }, '“' + (t.length > 30 ? t.slice(0, 29) + '…' : t) + '”')); }
+          if (s.barra) como.push(h('span', { class: 'etq mono' }, s.barra));
+          (s.llama_a || []).forEach(function (n) { como.push(h('span', { class: 'etq mono', title: 'La usa por dentro' }, '↳ ' + n)); });
+          var tras = s.despues ? (s.despues.skill ? tit(skillPorNombre(s.despues.skill)) || s.despues.skill : s.despues.texto) : '';
+          var cuando = h('div', { class: 'cuando' }, [s.programada
+            ? h('span', { class: 'chip-cuando', title: s.programada }, [svg(({ correo: 'sobre', skill: 'cadena', evento: 'evento' })[((D.rutinas.filter(function (r) { return r.skill === s.nombre; }).pop() || {}).disparador || {}).tipo] || 'reloj'), s.programada.length > 40 ? s.programada.slice(0, 39) + '…' : s.programada])
+            : h('button', { class: 'chip-cuando', onclick: function () { programarSkill(s); } }, [svg('reloj'), 'Programar']),
+            s.despues
+              ? h('button', { class: 'chip-cuando fijo', title: 'Al terminar, lanza: ' + tras + (s.despues.pendiente ? ' (por aplicar)' : ''), onclick: function () { encadenarSkill(s); } }, [svg('cadena'), h('span', { class: 'corto' }, '→ ' + tras), s.despues.pendiente ? h('i', { class: 'punto pendiente' }) : null])
+              : h('button', { class: 'chip-cuando', onclick: function () { encadenarSkill(s); } }, [svg('cadena'), 'Al terminar…'])]);
+          return h('div', { class: 'skill' + (s.activada ? '' : ' apagada') }, [
+            logo(s, true),
+            h('div', { class: 'nom' }, [s.titulo || s.nombre, s.titulo ? h('code', {}, s.nombre) : null, s.estado && s.estado !== 'lista' ? h('div', { style: 'margin-top:4px' }, h('span', { class: 'etq' }, s.estado === 'por-hacer' ? 'Por hacer' : 'En construcción')) : null]),
+            h('div', {}, [h('div', { class: 'para' }, s.para || ''), h('div', { class: 'como' }, como)]),
+            cuando,
+            h('button', { class: 'interruptor' + (s.activada ? ' on' : ''), role: 'switch', 'aria-checked': s.activada ? 'true' : 'false', 'aria-label': (s.activada ? 'Apagar ' : 'Encender ') + s.nombre, title: s.activada ? 'Encendida' : 'Apagada', onclick: function () { cambiarSkill(s, !s.activada); } })
+          ]);
+        }))
+      ]));
+    });
+    nodo.appendChild(h('div', { class: 'titulo-seccion' }, [h('h2', {}, 'Tus rutinas'), h('button', { class: 'btn', onclick: nuevaRutina }, [svg('mas'), 'Nueva rutina'])]));
+    nodo.appendChild(h('p', { class: 'sub' }, 'Tareas que Claude lanza solo: con horario, cuando llega un correo o cuando termina otra skill. Con ▶ la lanzas ahora, con el lápiz cambias cuándo y con el interruptor la pausas.'));
+    if (!rs.length) nodo.appendChild(h('div', { class: 'vacio' }, 'Aún no hay rutinas. Pulsa «Programar» en una skill.'));
+    else nodo.appendChild(h('div', { class: 'rejilla' }, rs.map(function (r) {
+      var tp = r.disparador.tipo || 'hora';
+      var ico = { hora: 'reloj', correo: 'sobre', skill: 'cadena' }[tp] || 'evento';
+      var etqDisp = { hora: 'Con horario', correo: 'Cuando llega un correo', skill: 'Al terminar otra skill' }[tp] || 'Cuando pasa algo';
+      function editar() {
+        if (!puente) return sinPuente();
+        editarDisparador('¿Cuándo se lanza?', r.disparador, function (disp) {
+          r.disparador = disp; r.cuando = disp.texto; r.pendiente = r.pendiente || 'cambiar';
+          var s = D.skills.filter(function (x) { return x.nombre === r.skill; })[0]; if (s) s.programada = disp.texto;
+          guardar(); pintar(); apuntarCambio({ que: 'cambiar-disparador', rutina: r.id, nombre: r.nombre, tarea_id: r.tarea_id || null, disparador: disp });
+          avisar('Ahora: ' + disp.texto);
+        }, r.skill);
+      }
+      return h('div', { class: 'tarjeta rutina' + (r.activa ? '' : ' apagada') }, [
+        h('div', { class: 'disparo' }, [h('div', { class: 'logo' }, svg(ico)), h('div', {}, [h('small', {}, etqDisp), h('b', {}, r.disparador.texto || r.cuando), (r.disparador.comprueba || (tp === 'correo' ? 'cada hora' : '')) ? h('span', { class: 'comprueba' }, 'Claude lo mira ' + (r.disparador.comprueba || 'cada hora')) : null])]),
+        h('div', { class: 'texto-rutina' }, [h('h3', {}, r.nombre), h('p', {}, r.que && r.que !== r.nombre ? r.que : '')]),
+        h('div', { class: 'pie-rutina' }, [
+          r.skill ? h('span', { class: 'etq mono' }, r.skill) : null,
+          r.pendiente ? h('span', { class: 'pendiente-aviso', title: 'Pulsa «Copiar a Claude» arriba para que lo aplique' }, [h('i', { class: 'punto pendiente' }), 'Por aplicar']) : null,
+          h('button', { class: 'mas primero', 'aria-label': 'Ejecutar ahora ' + r.nombre, title: 'Ejecutar ahora (copia el texto para Claude)', onclick: function () { ejecutarAhora(r); } }, svg('play')),
+          h('button', { class: 'mas', 'aria-label': 'Cambiar cuándo', title: 'Cambiar cuándo', onclick: editar }, svg('lapiz')),
+          h('button', { class: 'interruptor' + (r.activa ? ' on' : ''), role: 'switch', 'aria-checked': r.activa ? 'true' : 'false', 'aria-label': (r.activa ? 'Pausar ' : 'Activar ') + r.nombre, onclick: function () {
+            if (!puente) return sinPuente();
+            var v = !r.activa;
+            function poner(val) { r.activa = val; r.pendiente = r.pendiente || 'cambiar'; guardar(); pintar(); apuntarCambio({ que: val ? 'activar-tarea' : 'pausar-tarea', rutina: r.id, nombre: r.nombre, tarea_id: r.tarea_id || null }); }
+            poner(v);
+            avisar((v ? 'En marcha: ' : 'En pausa: ') + r.nombre, function () { poner(!v); });
+          } })
+        ])
+      ]);
+    })));
+    return nodo;
+  }
+
+  // Quitar del panel: no borra nada (la app o el artefacto siguen en su sitio). Se apunta en `quitadas` para que Claude no lo vuelva a añadir.
+  function quitarApp(a) {
+    if (!puente) return sinPuente();
+    var i = D.apps.indexOf(a), q = { nombre: a.nombre, url: a.url || null, tipo: a.tipo || null, fecha: new Date().toISOString().slice(0, 10) };
+    D.apps.splice(i, 1); D.quitadas.push(q); guardar(); pintar();
+    avisar('Quitado del panel: ' + a.nombre, function () {
+      D.apps.splice(i, 0, a); var k = D.quitadas.indexOf(q); if (k >= 0) D.quitadas.splice(k, 1); guardar(); pintar();
+    });
+  }
+  function menuApp(a) {
+    return function (e) { menuFlot(e.currentTarget, [{ texto: 'Quitar del panel', accion: function () { quitarApp(a); } }]); };
+  }
+  function listaApps(vis) {
+    if (!vis.length) return h('div', { class: 'vacio' }, busca ? 'Nada con «' + busca + '».' : filtroApps === 'artefactos' ? 'Aún no hay artefactos. Cada uno que cree Claude aparecerá aquí.' : 'Aún no hay apps.');
+    if (filtroApps === 'artefactos') return h('div', { class: 'tarjeta lista' }, vis.map(function (a) {
+      var u = seguro(a.url);
+      return h('div', { class: 'fila-art' }, [logoApp(a, true), h('div', { class: 'nom-art' }, [h('b', {}, a.nombre), a.para ? h('span', {}, a.para) : null]),
+        a.fecha ? h('span', { class: 'etq mono' }, a.fecha) : h('span'),
+        accionApp(a) || h('span'),
+        h('button', { class: 'mas', 'aria-label': 'Más opciones', onclick: menuApp(a) }, svg('puntos'))]);
+    }));
+    return h('div', { class: 'rejilla' }, vis.map(function (a) {
+      var u = seguro(a.url);
+      return h('div', { class: 'tarjeta app-tarjeta' }, [
+        h('div', { class: 'cab' }, [logoApp(a), h('div', { style: 'min-width:0;flex:1' }, [h('h3', {}, a.nombre), a.para ? h('p', {}, a.para) : null]),
+          h('button', { class: 'mas', 'aria-label': 'Más opciones', onclick: menuApp(a) }, svg('puntos'))]),
+        h('div', { class: 'pie' }, [a.tipo ? h('span', { class: 'etq' }, a.tipo) : null, a.estado && a.estado !== 'en uso' ? h('span', { class: 'etq' }, a.estado) : null, a.fecha ? h('span', { class: 'etq mono' }, a.fecha) : null,
+          accionApp(a)])
+      ]);
+    }));
+  }
+  function vistaApps() {
+    var todas = D.apps, arts = todas.filter(function (a) { return a.tipo === 'artefacto'; }), apps = todas.filter(function (a) { return a.tipo !== 'artefacto'; });
+    if (!todas.length) return h('div', { class: 'vacio' }, 'Todavía no hay apps. Cuando tengas la primera, Claude la añade aquí con su enlace.');
+    function filtrar() {
+      var base = filtroApps === 'artefactos' ? arts : apps, q = busca.trim().toLowerCase();
+      return q ? base.filter(function (a) { return ((a.nombre || '') + ' ' + (a.para || '') + ' ' + (a.tipo || '')).toLowerCase().indexOf(q) >= 0; }) : base;
+    }
+    var hueco = h('div', {}, listaApps(filtrar()));
+    return h('div', {}, [
+      h('div', { class: 'cifras' }, [
+        h('div', { class: 'cifra' }, [h('b', {}, apps.length), h('span', {}, 'apps')]),
+        h('div', { class: 'cifra' }, [h('b', {}, arts.length), h('span', {}, 'artefactos')])
+      ]),
+      h('div', { class: 'barra' }, [
+        h('div', { class: 'segmento' }, [['apps', 'Apps'], ['artefactos', 'Artefactos · ' + arts.length]].map(function (o) {
+          return h('button', { class: filtroApps === o[0] ? 'on' : '', onclick: function () { filtroApps = o[0]; pintar(); } }, o[1]);
+        })),
+        h('label', { class: 'buscar' }, [svg('lupa'), h('input', { type: 'search', value: busca, placeholder: filtroApps === 'artefactos' ? 'Buscar artefacto' : 'Buscar app', 'aria-label': 'Buscar',
+          oninput: function () { busca = this.value; hueco.textContent = ''; hueco.appendChild(listaApps(filtrar())); } })])
+      ]),
+      hueco
+    ]);
+  }
+
+  function pintar() {
+    var raiz = document.getElementById('app');
+    var y = window.scrollY;
+    raiz.textContent = '';
+    var p = PASOS.filter(function (x) { return x.id === actual; })[0];
+    var M = D.marca;
+    var menu = h('nav', { class: 'menu' }, [
+      h('div', { class: 'marca' }, [
+        h('button', { class: 'marca-logo', 'aria-label': 'Cambiar la imagen', title: 'Cambiar la imagen', onclick: function (e) { menuImagen(e.currentTarget); } }, [imagenMarca(M) ? h('img', { src: M.logo, alt: '' }) : (M.siglas || inicial(M.nombre || 'T')), h('span', { class: 'cambiar' }, svg('camara'))]),
+        h('div', {}, [h('b', {}, M.nombre || 'Tu plataforma'), h('small', {}, D.cliente || M.subtitulo || '')])
+      ]),
+      h('div', { class: 'navs' }, PASOS.map(function (x) {
+        var bloq = !desb[x.id];
+        return h('button', { class: 'item' + (x.id === actual ? ' activo' : '') + (bloq ? ' bloqueado' : ''), 'aria-current': x.id === actual ? 'page' : null, onclick: function () { actual = x.id; try { history.replaceState(null, '', '#' + x.id); } catch (e) {} pintar(); window.scrollTo(0, 0); } }, [
+          svg(x.icono, 'ico'), h('span', { class: 'txt' }, [h('b', {}, x.titulo)]), bloq ? svg('candado', 'cand') : null
+        ]);
+      })),
+      h('div', { class: 'pie-menu' }, [
+        h('div', { class: 'puente' + (puente ? ' on' : '') }, [h('i'), puente ? 'Conectada: lo que cambies se guarda' : 'Solo para mirar. Para cambiar cosas, ábrela con «Abrir plataforma»']),
+        h('button', { class: 'tema', 'aria-label': 'Cambiar tema', onclick: function () { tema = tema === 'oscuro' ? 'claro' : 'oscuro'; aplicarTema(); pintar(); } }, [svg(tema === 'oscuro' ? 'sol' : 'luna'), h('span', {}, tema === 'oscuro' ? 'Tema claro' : 'Tema oscuro')]),
+        D.actualizado ? h('span', { class: 'fecha' }, 'Actualizado el ' + D.actualizado) : null
+      ])
+    ]);
+    var cuerpo = !desb[p.id] ? bloqueada(p) : p.id === 'conectores' ? vistaConectores() : p.id === 'skills' ? vistaSkills() : vistaApps();
+    raiz.appendChild(h('div', { class: 'app' }, [menu, h('main', { class: 'contenido' }, [h('p', { class: 'ceja' }, p.titulo), h('h1', {}, p.h1), h('p', { class: 'sub' }, p.sub), cuerpo])]));
+    window.scrollTo(0, y);
+  }
+  aplicarTema(); aplicarMarca(); pintar(); comprobarPuente();
+})();
+</script>
+</body>
+</html>
