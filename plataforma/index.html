@@ -97,6 +97,7 @@ html[data-tema='oscuro'] .segmento button.on { background: #2a2526; }
 .logo.peq { width: 34px; height: 34px; border-radius: 10px; font-size: 17px; }
 .logo.peq img { width: 18px; height: 18px; }
 .logo.plano svg { width: 22px; height: 22px; } .logo.plano.peq svg { width: 17px; height: 17px; }
+.logo img.color { filter: none; }
 .logo img.propia { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; filter: none; }
 .etq svg { width: 12px; height: 12px; }
 .tarjeta { border: 1px solid var(--linea); background: var(--tarjeta); border-radius: var(--radio); box-shadow: var(--sombra); }
@@ -210,6 +211,9 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
 /* ---------- diálogo y aviso ---------- */
 .velo { position: fixed; inset: 0; background: rgba(0,0,0,.38); display: grid; place-items: center; z-index: 50; padding: 16px; }
 .dialogo { background: var(--tarjeta); border: 1px solid var(--linea-fuerte); border-radius: 22px; width: min(480px, 100%); padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.fila-conf { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--linea); }
+.fila-conf b { flex: 1; font-weight: 500; }
+.fila-conf .ico { width: 20px; height: 20px; flex: none; }
 .dialogo h3 { margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -.02em; }
 .dialogo p { margin: 0; color: var(--tinta-2); font-size: 14px; }
 .dialogo label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--tinta-2); }
@@ -263,6 +267,7 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
     enchufe: '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0V8zM12 17v4"/>',
     rayo: '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/>',
     rejilla: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+    engranaje: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>',
     candado: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
     flecha: '<path d="M7 17 17 7M8 7h9v9"/>',
     sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/>',
@@ -305,6 +310,14 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
   var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   var EVENTOS = ['Al terminar una reunión', 'Al terminar una reunión con un cliente', 'Al llegar un correo nuevo', 'Al entrar un contacto nuevo en el CRM', 'Al subir un archivo a una carpeta'];
   var LOGO_CDN = 'https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/';
+  // Logos oficiales en color (colección «logos» de Iconify), por el mismo nombre que simple-icons. Los que no están, salen en monocromo.
+  var LOGO_COLOR = 'https://api.iconify.design/logos/';
+  var COLOR = { gmail: 'google-gmail', googledrive: 'google-drive', googlecalendar: 'google-calendar', notion: 'notion-icon', whatsapp: 'whatsapp-icon', github: 'github-icon',
+    supabase: 'supabase-icon', vercel: 'vercel-icon', googlechrome: 'chrome', miro: 'miro-icon', googlegemini: 'google-gemini', slack: 'slack-icon', dropbox: 'dropbox',
+    linkedin: 'linkedin-icon', instagram: 'instagram-icon', youtube: 'youtube-icon', stripe: 'stripe', trello: 'trello', figma: 'figma', airtable: 'airtable', hubspot: 'hubspot',
+    zoom: 'zoom-icon', googlemeet: 'google-meet', microsoftteams: 'microsoft-teams', microsoftonedrive: 'microsoft-onedrive', telegram: 'telegram', facebook: 'facebook',
+    x: 'x', tiktok: 'tiktok-icon', wordpress: 'wordpress-icon', shopify: 'shopify' };
+  var CLARO_EN_OSCURO = { github: 1, notion: 1, vercel: 1, x: 1 };   // negros de marca: en tema oscuro se invierten para que se vean
 
   // ---------- utilidades ----------
   function svg(nombre, cls) {
@@ -337,9 +350,14 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
     var caja = h('div', { class: 'logo' + (peq ? ' peq' : '') });
     var reserva = obj.icono || inicial(obj.servicio || obj.nombre || obj.titulo);
     if (obj.logo && /^[a-z0-9]+$/.test(obj.logo)) {
-      var img = h('img', { src: LOGO_CDN + obj.logo + '.svg', alt: '', loading: 'lazy' });
-      img.addEventListener('error', function () { caja.textContent = reserva; });
+      var color = COLOR[obj.logo];
+      var img = h('img', { src: color ? LOGO_COLOR + color + '.svg' : LOGO_CDN + obj.logo + '.svg', alt: '', loading: 'lazy', class: color && !CLARO_EN_OSCURO[obj.logo] ? 'color' : '' });
+      img.addEventListener('error', function () { if (color) { img.className = ''; img.src = LOGO_CDN + obj.logo + '.svg'; color = null; } else caja.textContent = reserva; });
       caja.appendChild(img);
+    } else if (obj.imagen && seguro(obj.imagen)) {
+      var im = h('img', { src: obj.imagen, alt: '', class: 'propia' });
+      im.addEventListener('error', function () { caja.textContent = reserva; });
+      caja.appendChild(im);
     } else caja.textContent = reserva;
     return caja;
   }
@@ -405,8 +423,13 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
     var lista = params.get('desbloqueado').split(',');
     PASOS.forEach(function (p) { desb[p.id] = lista.indexOf(p.id) >= 0; });
   }
+  // Qué pestañas se enseñan: lo elige la persona en «Configuración» (D.visibles, que guarda el puente; sin puente, en este navegador).
+  var vis = D.visibles || null;
+  if (!vis) { try { vis = JSON.parse(localStorage.getItem('plataforma-visibles') || 'null'); } catch (e) {} }
+  function visible(id) { return !vis || vis[id] !== false; }
+  function pestanasVisibles() { var v = PASOS.filter(function (p) { return visible(p.id); }); return v.length ? v : PASOS; }
   var actual = params.get('pestana') || (location.hash || '').replace('#', '');
-  if (!PASOS.some(function (p) { return p.id === actual; })) actual = (PASOS.filter(function (p) { return desb[p.id]; })[0] || PASOS[0]).id;
+  if (!pestanasVisibles().some(function (p) { return p.id === actual; })) actual = (pestanasVisibles().filter(function (p) { return desb[p.id]; })[0] || pestanasVisibles()[0]).id;
   var filtroCon = 'todos', filtroApps = params.get('artefactos') === '1' ? 'artefactos' : 'apps';
   var puente = false, pendientes = 0, listaCambios = [], carpeta = '', busca = '';
   var tema = 'claro';
@@ -755,6 +778,22 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
           } }, 'Siguiente')])];
     });
   }
+  function configuracion() {
+    dialogo(function (cerrar) {
+      var filas = PASOS.map(function (x) {
+        var on = visible(x.id);
+        var b = h('button', { class: 'interruptor' + (on ? ' on' : ''), role: 'switch', 'aria-checked': on ? 'true' : 'false', 'aria-label': (on ? 'Ocultar ' : 'Enseñar ') + x.titulo, onclick: function () {
+          var ahora = !visible(x.id);
+          if (!ahora && pestanasVisibles().length === 1) return avisar('Tiene que quedar al menos una parte visible');
+          vis = Object.assign({}, vis || {}); vis[x.id] = ahora; D.visibles = vis;
+          try { localStorage.setItem('plataforma-visibles', JSON.stringify(vis)); } catch (e) {}
+          guardar(); cerrar(); pintar();
+        } });
+        return h('div', { class: 'fila-conf' }, [svg(x.icono, 'ico'), h('b', {}, x.titulo), b]);
+      });
+      return [h('h3', {}, 'Qué partes se ven'), h('p', {}, 'Apaga las que no quieras enseñar ahora (por ejemplo, mientras grabas una clase). Lo que apagues sigue existiendo: solo se esconde.')].concat(filas, [h('div', { class: 'acciones' }, [h('button', { class: 'btn principal', onclick: cerrar }, 'Listo')])]);
+    });
+  }
   function nuevaRutina() {
     if (!puente) return sinPuente();
     elegirSkill('Nueva rutina', 'Después eliges cuándo se lanza: a una hora o cuando pasa algo.', null, null, function (n, t) {
@@ -927,7 +966,7 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
         h('button', { class: 'marca-logo', 'aria-label': 'Cambiar la imagen', title: 'Cambiar la imagen', onclick: function (e) { menuImagen(e.currentTarget); } }, [imagenMarca(M) ? h('img', { src: M.logo, alt: '' }) : (M.siglas || inicial(M.nombre || 'T')), h('span', { class: 'cambiar' }, svg('camara'))]),
         h('div', {}, [h('b', {}, M.nombre || 'Tu plataforma'), h('small', {}, D.cliente || M.subtitulo || '')])
       ]),
-      h('div', { class: 'navs' }, PASOS.map(function (x) {
+      h('div', { class: 'navs' }, pestanasVisibles().map(function (x) {
         var bloq = !desb[x.id];
         return h('button', { class: 'item' + (x.id === actual ? ' activo' : '') + (bloq ? ' bloqueado' : ''), 'aria-current': x.id === actual ? 'page' : null, onclick: function () { actual = x.id; try { history.replaceState(null, '', '#' + x.id); } catch (e) {} pintar(); window.scrollTo(0, 0); } }, [
           svg(x.icono, 'ico'), h('span', { class: 'txt' }, [h('b', {}, x.titulo)]), bloq ? svg('candado', 'cand') : null
@@ -936,6 +975,7 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
       h('div', { class: 'pie-menu' }, [
         h('div', { class: 'puente' + (puente ? ' on' : '') }, [h('i'), puente ? 'Conectada: lo que cambies se guarda' : 'Solo para mirar. Para cambiar cosas, ábrela con «Abrir plataforma»']),
         h('button', { class: 'tema', 'aria-label': 'Cambiar tema', onclick: function () { tema = tema === 'oscuro' ? 'claro' : 'oscuro'; aplicarTema(); pintar(); } }, [svg(tema === 'oscuro' ? 'sol' : 'luna'), h('span', {}, tema === 'oscuro' ? 'Tema claro' : 'Tema oscuro')]),
+        h('button', { class: 'tema', onclick: configuracion }, [svg('engranaje'), h('span', {}, 'Configuración')]),
         D.actualizado ? h('span', { class: 'fecha' }, 'Actualizado el ' + D.actualizado) : null
       ])
     ]);

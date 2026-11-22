@@ -9,9 +9,9 @@ Tres pestañas, una por nivel: **Conectores** (nivel 1), **Skills y rutinas** (n
 2. Cada prompt rellena **solo su pestaña**: sustituye esa lista, pone su `desbloqueado.<pestaña>` en `true`, rellena `actualizado` (dd-mm-aaaa) y no toca las demás.
 3. Los datos salen de lo que la persona **de verdad tiene**. Si dudas, pregúntale o déjalo fuera. Nada inventado.
 4. Nunca escribas contraseñas, claves, tokens ni códigos.
-5. **Que se vea**: cada servicio lleva su logo (`logo`, el nombre de la marca en simple-icons: `gmail`, `googledrive`, `googlecalendar`, `notion`, `whatsapp`, `github`, `supabase`, `vercel`, `googlechrome`, `miro`, `googlegemini`, `slack`, `dropbox`…, comprobado en https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/<nombre>.svg). Si la marca no está, un emoji en `icono` (🎙️). Cada skill lleva un emoji en `icono` que diga lo que hace, y cada área de skills el suyo en `areas`. Las apps y los artefactos, no: su logo o un icono plano (ver «Apps»).
+5. **Que se vea**: cada servicio lleva su logo (`logo`, el nombre de la marca en simple-icons: `gmail`, `googledrive`, `googlecalendar`, `notion`, `whatsapp`, `github`, `supabase`, `vercel`, `googlechrome`, `miro`, `googlegemini`, `slack`, `dropbox`…, comprobado en https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/<nombre>.svg). La web los enseña en su color oficial. Si la marca no está, o es una web con su propio icono, `imagen` (https) o un emoji en `icono` (🎙️). Cada skill lleva un emoji en `icono` que diga lo que hace, y cada área de skills el suyo en `areas`. Las apps y los artefactos, no: su logo o un icono plano (ver «Apps»).
 6. Al terminar: arranca el puente (`node servidor.mjs` en segundo plano, si no está ya), abre http://localhost:4700 y di en dos líneas qué has puesto.
-7. **Mantener al día**, sin que te lo pidan: cuando la persona conecte algo, cree una skill, programe una tarea o monte una app, añade su línea. **Cada artefacto que crees** se añade a `apps` con `tipo: "artefacto"`, su `url` y la `fecha` (dd-mmm). **Nunca vuelvas a añadir lo que esté en `quitadas`** (misma `url` o mismo nombre): la persona lo quitó del panel. Al poner al día los conectores, **no pises `alias`** (el nombre que la persona le puso a una cuenta).
+7. **Mantener al día**, sin que te lo pidan: cuando la persona conecte algo, cree una skill, programe una tarea o monte una app, añade su línea. **Cada artefacto que crees** se añade a `apps` con `tipo: "artefacto"`, su `url` y la `fecha` (dd-mmm). **No toques `visibles`** (qué pestañas se enseñan: la persona lo cambia en «Configuración»). **Nunca vuelvas a añadir lo que esté en `quitadas`** (misma `url` o mismo nombre): la persona lo quitó del panel. Al poner al día los conectores, **no pises `alias`** (el nombre que la persona le puso a una cuenta).
 8. **Aplicar los cambios hechos en la web**: la web guarda en `cambios.json` lo que solo puede hacer Claude y la persona te lo pasa con el botón «Copiar a Claude» (un texto con la lista). También cuando diga «aplica los cambios de mi plataforma». Aplica cada línea con `hecho: false`:
    - `cambiar-disparador`, `activar-tarea`, `pausar-tarea`: en la tarea programada de la app de Claude (`tarea_id`; si no lo hay, búscala por nombre). `disparador.cron` es la hora en formato cron.
    - `crear-tarea-programada`: crea la tarea que lanza esa skill (`skill`) o hace lo que dice `texto`, con ese disparador, y guarda su `tarea_id` en la rutina.
@@ -32,10 +32,11 @@ window.PLATAFORMA = {
   desbloqueado: { conectores: false, skills: false, apps: false },
   prompts: { conectores: "…", skills: "…", apps: "…" },
   areas: { "Clientes": "🤝", "Correo": "✉️" },
-  conectores: [ { servicio, logo, icono, para, cuentas: [ { cuenta, alias, tipo, estado } ] } ],
+  conectores: [ { servicio, logo, imagen, icono, para, cuentas: [ { cuenta, alias, tipo, estado } ] } ],
   skills:     [ { nombre, titulo, area, icono, logo, para, palabras, barra, activada, programada, estado, llama_a, ruta, despues: { skill, texto, pendiente } } ],
   rutinas:    [ { id, nombre, que, activa, disparador: { tipo: "hora"|"correo"|"skill"|"evento", texto, cron, condicion, skill }, donde, skill, tarea_id, pendiente } ],
   apps:       [ { nombre, logo, imagen, figura, para, tipo, url, abrir, estado, fecha } ],
+  visibles:   { conectores: true, skills: true, apps: true },   // lo cambia la persona en «Configuración»; no lo toques
   quitadas:   [ { nombre, url, tipo, fecha } ]
 };
 ```
