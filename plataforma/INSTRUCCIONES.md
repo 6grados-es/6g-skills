@@ -44,6 +44,8 @@ window.PLATAFORMA = {
 ### Conectores
 - **Una tarjeta por servicio, con sus cuentas dentro.** Dos Gmail = un `servicio: "Gmail"` con dos `cuentas`. `cuenta`: cómo la reconoce la persona («Personal», «Trabajo · hola@»), sin escribir el correo entero.
 - `tipo`: **Conector** (oficial) · **Login** · **Token** · **Navegador** · **API**. `estado`: `ok` (probado con una llamada real), `falla` o `pendiente`.
+- **Aquí sale TODA conexión, de cualquier tipo.** No solo los conectores de la app de Claude: también cada servicio al que Claude entra con una clave o un token (una API como Groq, Holded o Eventbrite), por login, por el navegador o con un script. Antes de dar la pestaña por hecha, busca también las claves (ficheros `claves.env`, `~/.config/…`, variables de entorno), las sesiones guardadas y los scripts que llaman a un servicio; si hay uno que no está en la lista, añádelo. Si no lo has podido probar con una llamada real, va con `estado: "pendiente"`, pero va. Y al conectar algo nuevo, lo añades en ese momento (regla 7). Pedro (22-nov): «siempre debe aparecer… cualquier conexión de cualquier tipo».
+- Logo: si el servicio no está en simple-icons ni en la lista `COLOR` de `index.html`, usa `icono` (emoji); no dejes la tarjeta sin imagen.
 
 ### Skills y rutinas
 - `titulo`: lo que hace, en palabras de persona («Bienvenida a un cliente»); `nombre`: el de la carpeta. `area`: 4-7 áreas.
