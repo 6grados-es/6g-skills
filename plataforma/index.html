@@ -214,6 +214,15 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
 .fila-conf { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--linea); }
 .fila-conf b { flex: 1; font-weight: 500; }
 .fila-conf .ico { width: 20px; height: 20px; flex: none; }
+.horario { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 1px solid var(--linea); border-radius: 14px; }
+.quitar-h { position: absolute; top: 8px; right: 8px; border: 0; background: none; padding: 4px; color: var(--tinta-2); }
+.quitar-h svg { width: 14px; height: 14px; }
+.etiqueta-dias { display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--tinta-2); }
+.dias-sel { display: flex; gap: 6px; }
+.dias-sel button { flex: 1 1 0; min-width: 0; max-width: 38px; aspect-ratio: 1; height: auto; border-radius: 50%; border: 1px solid var(--linea-fuerte); background: none; color: var(--tinta); font-size: 13px; font-weight: 500; padding: 0; }
+.dias-sel button.on { background: var(--acento); color: var(--acento-texto); border-color: var(--acento); }
+.atajos { display: flex; gap: 12px; }
+.atajos button { border: 0; background: none; padding: 0; font-size: 12.5px; color: var(--tinta-2); text-decoration: none; border-bottom: 1px dashed var(--linea-fuerte); }
 .dialogo h3 { margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -.02em; }
 .dialogo p { margin: 0; color: var(--tinta-2); font-size: 14px; }
 .dialogo label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--tinta-2); }
@@ -272,6 +281,7 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
     flecha: '<path d="M7 17 17 7M8 7h9v9"/>',
     sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/>',
     luna: '<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
+    cerrar: '<path d="M6 6l12 12M18 6 6 18"/>',
     reloj: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     evento: '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/>',
     puntos: '<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>',
@@ -468,19 +478,23 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
     if (!d) return '';
     if (d.tipo === 'correo') return 'que revise mi correo cada hora y, cuando llegue uno que ' + d.condicion + ', se lance';
     if (d.tipo === 'skill') return 'que se lance cuando termine la skill `' + d.skill + '`';
-    return (d.texto || '').charAt(0).toLowerCase() + (d.texto || '').slice(1) + (d.cron ? ' (cron ' + d.cron + ')' : '');
+    var cr = d.crons && d.crons.length ? d.crons : d.cron ? [d.cron] : [];
+    return (d.texto || '').charAt(0).toLowerCase() + (d.texto || '').slice(1) + (cr.length ? ' (' + cr.map(function (c) { return 'cron ' + c; }).join('; ') + (cr.length > 1 ? ': un horario por cada cron, todos en la misma rutina' : '') + ')' : '');
+  }
+  function fraseDonde(c) {
+    return c.donde === 'en la nube' ? ' Que se ejecute en la nube (rutina en la nube de Claude), no en mi ordenador.' : c.donde ? ' Que se ejecute en mi ordenador (tarea programada local).' : '';
   }
   function describirCambio(c) {
     var nom = '«' + (c.nombre || c.skill || '') + '»';
     switch (c.que) {
-      case 'cambiar-disparador': return 'Cambia cuándo se lanza la tarea programada ' + nom + ': ' + fraseDisparador(c.disparador) + '.';
+      case 'cambiar-disparador': return 'Cambia cuándo se lanza la tarea programada ' + nom + ': ' + fraseDisparador(c.disparador) + '.' + fraseDonde(c);
       case 'activar-tarea': return 'Vuelve a poner en marcha la tarea programada ' + nom + '.';
       case 'pausar-tarea': return 'Pausa la tarea programada ' + nom + '.';
       case 'crear-tarea-programada':
         if (c.disparador && c.disparador.tipo === 'skill') return 'Cuando termine la skill `' + c.disparador.skill + '`, que lance ' + (c.skill ? 'la skill `' + c.skill + '`' : 'esto: ' + c.texto) + '. Añádelo como último paso de `' + c.disparador.skill + '`.';
         var hace = c.skill ? 'use la skill `' + c.skill + '`' : 'haga esto: ' + c.texto;
         if (c.disparador && c.disparador.tipo === 'correo') return 'Crea una tarea programada que revise mi correo cada hora y, cuando llegue uno que ' + c.disparador.condicion + ', ' + hace + '. Si no llega ninguno así, que no haga nada.';
-        if (c.disparador && c.disparador.tipo === 'hora') return 'Crea una tarea programada que se lance ' + fraseDisparador(c.disparador) + ' y ' + hace + '.';
+        if (c.disparador && c.disparador.tipo === 'hora') return 'Crea una tarea programada que se lance ' + fraseDisparador(c.disparador) + ' y ' + hace + '.' + fraseDonde(c);
         return 'Crea una rutina que se lance ' + fraseDisparador(c.disparador) + ' y ' + hace + '.';
       case 'encadenar-skill': return 'Cuando termine la skill `' + c.skill + '`, que lance ' + (c.despues ? 'la skill `' + c.despues + '`' : 'lo que te digo') + (c.texto ? ' (' + c.texto + ')' : '') + '. Añádelo como último paso de su SKILL.md.';
       case 'quitar-encadenado': return 'Quita del final de la skill `' + c.skill + '` que lance ' + (c.despues ? '`' + c.despues + '`' : 'otra skill') + (c.texto ? ' (' + c.texto + ')' : '') + '.';
@@ -534,82 +548,131 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
     var f = velo.querySelector('select, input, button.principal'); if (f) f.focus();
     velo.addEventListener('keydown', function (e) { if (e.key === 'Escape') velo.remove(); });
   }
-  // Horario de una rutina: a una hora fija (cada día, de lunes a viernes, cada semana) o cada cierto tiempo (cada hora, cada pocos minutos), con franja opcional.
-  var HORARIO_OPC = [['dia', 'Cada día'], ['laborables', 'De lunes a viernes'], ['semana', 'Cada semana'], ['cada-hora', 'Cada hora'], ['minutos', 'Por minutos']];
+  // Por ahora las rutinas solo se programan en el calendario: ciertos días de la semana a una hora, o cada hora dentro de una franja.
+  // Para volver a enseñar «Cuando pasa algo» (correo, otra skill, otra cosa), ponlo en false.
+  var SOLO_CALENDARIO = true;
+  var HORARIO_OPC = [['hora', 'A una hora'], ['cada-hora', 'Cada hora']];
+  var ORDEN_DIAS = [1, 2, 3, 4, 5, 6, 0], INI_DIA = { 1: 'L', 2: 'M', 3: 'X', 4: 'J', 5: 'V', 6: 'S', 0: 'D' };
   function hhmm(t) { var q = String(t).split(':'); return ('0' + q[0]).slice(-2) + ':' + q[1]; }
   function sinCero(t) { return String(t).replace(/^0(\d)/, '$1'); }
-  function leerHorario(p) {
-    var x = { f: 'dia', dia: 1, hora: '09:00', cada: 30, dias: 'todos', desde: '', hasta: '' };
+  function ordenarDias(d) { return ORDEN_DIAS.filter(function (n) { return d.indexOf(n) >= 0; }); }
+  function leerUno(p) {
+    var x = { f: 'hora', dias: ORDEN_DIAS.slice(), hora: '09:00', desde: '', hasta: '' };
     if (!p || p.tipo !== 'hora') return x;
-    if (p.frecuencia) { x.f = p.frecuencia; ['dia', 'hora', 'cada', 'dias', 'desde', 'hasta'].forEach(function (k) { if (p[k] !== undefined && p[k] !== null) x[k] = p[k]; }); return x; }
-    var t = (p.texto || '').toLowerCase(), m;          // datos viejos: se entiende la frase
-    if ((m = t.match(/cada (\d+) minutos/))) { x.f = 'minutos'; x.cada = +m[1]; }
-    else if (/cada hora/.test(t)) x.f = 'cada-hora';
-    else if ((m = t.match(/cada (domingo|lunes|martes|miércoles|jueves|viernes|sábado)/))) { x.f = 'semana'; x.dia = DIAS.indexOf(m[1]); }
-    else if (/lunes a viernes/.test(t)) x.f = 'laborables';
-    if (/lunes a viernes/.test(t) && (x.f === 'minutos' || x.f === 'cada-hora')) x.dias = 'laborables';
+    function lista(v) { return Array.isArray(v) ? v.map(Number) : v === 'laborables' ? [1, 2, 3, 4, 5] : ORDEN_DIAS.slice(); }   // datos viejos: «todos» o «laborables»
+    if (p.frecuencia) {
+      var f = p.frecuencia;
+      if (f === 'hora' || f === 'dia') x.dias = lista(p.dias);
+      else if (f === 'laborables') x.dias = [1, 2, 3, 4, 5];
+      else if (f === 'semana') x.dias = [p.dia !== undefined && p.dia !== null ? +p.dia : 1];
+      else { x.f = 'cada-hora'; x.dias = lista(p.dias); }   // cada hora o por minutos (viejo): ahora siempre «cada hora»
+      if (p.hora) x.hora = p.hora; if (p.desde) x.desde = p.desde; if (p.hasta) x.hasta = p.hasta;
+      return x;
+    }
+    var t = (p.texto || '').toLowerCase(), m;          // datos viejos, solo con la frase
+    if (/cada (\d+) minutos|cada hora/.test(t)) { x.f = 'cada-hora'; if (/lunes a viernes/.test(t)) x.dias = [1, 2, 3, 4, 5]; }
+    else if ((m = t.match(/cada (domingo|lunes|martes|miércoles|jueves|viernes|sábado)/))) x.dias = [DIAS.indexOf(m[1])];
+    else if (/lunes a viernes/.test(t)) x.dias = [1, 2, 3, 4, 5];
     if ((m = t.match(/de (\d{1,2}:\d\d) a (\d{1,2}:\d\d)/))) { x.desde = hhmm(m[1]); x.hasta = hhmm(m[2]); }
     if ((m = t.match(/a las (\d{1,2}:\d\d)/))) x.hora = hhmm(m[1]);
     return x;
   }
-  function seRepite(x) { return x.f === 'minutos' || x.f === 'cada-hora'; }
-  function textoHorario(x) {
-    if (seRepite(x)) {
-      var fr = (x.f === 'minutos' ? 'Cada ' + x.cada + ' minutos' : 'Cada hora') + (x.dias === 'laborables' ? ' de lunes a viernes' : '');
-      return x.desde && x.hasta ? fr + ', de ' + sinCero(x.desde) + ' a ' + sinCero(x.hasta) : fr;
-    }
-    if (x.f === 'laborables') return 'De lunes a viernes a las ' + sinCero(x.hora);
-    if (x.f === 'semana') return 'Cada ' + DIAS[x.dia] + ' a las ' + sinCero(x.hora);
-    return 'Cada día a las ' + sinCero(x.hora);
+  // Una rutina puede tener varios horarios (por ejemplo, el lunes a las 9:00 y el viernes a las 18:00): `disparador.horarios`.
+  function leerHorario(p) {
+    if (p && p.tipo === 'hora' && Array.isArray(p.horarios) && p.horarios.length) return p.horarios.map(function (q) { return leerUno({ tipo: 'hora', frecuencia: q.frecuencia, dias: q.dias, hora: q.hora, desde: q.desde, hasta: q.hasta }); });
+    return [leerUno(p)];
   }
+  function seRepite(x) { return x.f === 'cada-hora'; }
+  function plural(n) { return n === 6 || n === 0 ? DIAS[n] + 's' : DIAS[n]; }
+  function diasFrase(d) {   // «todos los días», «de lunes a viernes», «los lunes y jueves»…
+    var s = ordenarDias(d);
+    if (s.length === 7) return 'todos los días';
+    if (s.join() === '1,2,3,4,5') return 'de lunes a viernes';
+    if (s.join() === '6,0') return 'los fines de semana';
+    var nom = s.map(plural);
+    return 'los ' + (nom.length > 1 ? nom.slice(0, -1).join(', ') + ' y ' + nom[nom.length - 1] : nom[0]);
+  }
+  function textoHorario(x) {
+    var f = diasFrase(x.dias);
+    if (seRepite(x)) {
+      var t = 'Cada hora' + (f === 'todos los días' ? '' : ', ' + f);
+      return x.desde && x.hasta ? t + ', de ' + sinCero(x.desde) + ' a ' + sinCero(x.hasta) : t;
+    }
+    if (f === 'todos los días') return 'Cada día a las ' + sinCero(x.hora);
+    if (x.dias.length === 1) return 'Cada ' + DIAS[x.dias[0]] + ' a las ' + sinCero(x.hora);
+    return f.charAt(0).toUpperCase() + f.slice(1) + ' a las ' + sinCero(x.hora);
+  }
+  function textoHorarios(hs) {
+    var t = hs.map(textoHorario).map(function (u, i) { return i ? u.charAt(0).toLowerCase() + u.slice(1) : u; });
+    return t.length > 1 ? t.slice(0, -1).join(', ') + ' y ' + t[t.length - 1] : t[0];
+  }
+  function cronesHorarios(hs) { return hs.map(cronHorario); }
   function cronHorario(x) {
-    var p = x.hora.split(':'), m = +p[1] || 0, hh = +p[0] || 0;
+    var s = ordenarDias(x.dias).sort(function (a, b) { return a - b; });
+    var dow = s.length === 7 ? '*' : s.join() === '1,2,3,4,5' ? '1-5' : s.join(',');
     if (seRepite(x)) {
       var horas = '*';
-      if (x.desde && x.hasta) { var a = +x.desde.split(':')[0], b = +x.hasta.split(':')[0]; if (+x.hasta.split(':')[1] === 0) b -= 1; horas = a + '-' + Math.max(a, b); }
-      return (x.f === 'minutos' ? '*/' + x.cada : '0') + ' ' + horas + ' * * ' + (x.dias === 'laborables' ? '1-5' : '*');
+      if (x.desde && x.hasta) { var a = +x.desde.split(':')[0], b = +x.hasta.split(':')[0]; horas = a + '-' + Math.max(a, b); }   // de 9:00 a 22:00 = a las 9, 10… 22
+      return '0 ' + horas + ' * * ' + dow;
     }
-    if (x.f === 'laborables') return m + ' ' + hh + ' * * 1-5';
-    if (x.f === 'semana') return m + ' ' + hh + ' * * ' + x.dia;
-    return m + ' ' + hh + ' * * *';
+    var p = x.hora.split(':');
+    return (+p[1] || 0) + ' ' + (+p[0] || 0) + ' * * ' + dow;
   }
-  function editarDisparador(titulo, previo, alGuardar, excluir) {
-    var tipo = previo && previo.tipo === 'evento' ? 'evento' : 'hora';
-    var x = leerHorario(previo);
-    // «Cuando pasa algo» tiene tres clases: llega un correo que…, termina otra skill, u otra cosa (lista o texto libre).
+  function editarDisparador(titulo, previo, alGuardar, excluir, dondePrevio) {
+    var calendario = SOLO_CALENDARIO;
+    var tipo = calendario || !previo || previo.tipo === 'hora' ? 'hora' : 'evento';
+    var hs = leerHorario(previo), donde = dondePrevio === 'en la nube' ? 'en la nube' : 'en tu ordenador';
+    // «Cuando pasa algo» (solo si SOLO_CALENDARIO es false) tiene tres clases: llega un correo que…, termina otra skill, u otra cosa.
     var clase = previo && previo.tipo === 'skill' ? 'skill' : previo && previo.tipo === 'evento' ? 'otro' : 'correo';
-    if (previo && (previo.tipo === 'correo' || previo.tipo === 'skill' || previo.tipo === 'evento')) tipo = 'evento';
     var cond = (previo && previo.condicion) || '', trasSkill = (previo && previo.skill) || '';
     var ev = (previo && previo.tipo === 'evento' && previo.texto) || EVENTOS[0];
     var opciones = D.skills.filter(function (s) { return s.nombre !== excluir; });
     dialogo(function (cerrar) {
       var cont = h('div', { style: 'display:flex;flex-direction:column;gap:14px' });
       function texto() {
-        if (tipo === 'hora') return textoHorario(x);
+        if (tipo === 'hora') return textoHorarios(hs);
         if (clase === 'correo') return 'Al llegar un correo que ' + (cond || '…');
         if (clase === 'skill') return 'Al terminar «' + (tit(skillPorNombre(trasSkill)) || '…') + '»';
         return ev;
       }
       function dibujar() {
         cont.textContent = '';
-        cont.appendChild(h('div', {}, h('div', { class: 'segmento' }, [
+        if (!calendario) cont.appendChild(h('div', {}, h('div', { class: 'segmento' }, [
           h('button', { class: tipo === 'hora' ? 'on' : '', onclick: function () { tipo = 'hora'; dibujar(); } }, 'Con horario'),
           h('button', { class: tipo === 'evento' ? 'on' : '', onclick: function () { tipo = 'evento'; dibujar(); } }, 'Cuando pasa algo')
         ])));
         if (tipo === 'hora') {
-          var fila = h('div', { class: 'fila2' }, [h('label', {}, ['Cuándo', h('select', { onchange: function () { x.f = this.value; dibujar(); } }, HORARIO_OPC.map(function (o) { return h('option', { value: o[0], selected: o[0] === x.f }, o[1]); }))])]);
-          if (x.f === 'semana') fila.appendChild(h('label', {}, ['Qué día', h('select', { onchange: function () { x.dia = +this.value; dibujar(); } }, [1, 2, 3, 4, 5, 6, 0].map(function (d) { return h('option', { value: d, selected: d === x.dia }, DIAS[d].charAt(0).toUpperCase() + DIAS[d].slice(1)); }))]));
-          if (x.f === 'minutos') fila.appendChild(h('label', {}, ['Cada cuánto', h('select', { onchange: function () { x.cada = +this.value; dibujar(); } }, [5, 10, 15, 30].map(function (n) { return h('option', { value: n, selected: n === x.cada }, n + ' minutos'); }))]));
-          if (!seRepite(x)) fila.appendChild(h('label', {}, ['A qué hora', h('input', { type: 'time', value: x.hora, onchange: function () { x.hora = this.value || '09:00'; dibujar(); } })]));
-          cont.appendChild(fila);
-          if (seRepite(x)) {
-            cont.appendChild(h('div', { class: 'fila3' }, [
-              h('label', {}, ['Qué días', h('select', { onchange: function () { x.dias = this.value; dibujar(); } }, [['todos', 'Todos los días'], ['laborables', 'De lunes a viernes']].map(function (o) { return h('option', { value: o[0], selected: o[0] === x.dias }, o[1]); }))]),
-              h('label', {}, ['Desde', h('input', { type: 'time', value: x.desde, onchange: function () { x.desde = this.value; if (x.desde && !x.hasta) x.hasta = '20:00'; dibujar(); } })]),
-              h('label', {}, ['Hasta', h('input', { type: 'time', value: x.hasta, onchange: function () { x.hasta = this.value; if (x.hasta && !x.desde) x.desde = '08:00'; dibujar(); } })])
+          hs.forEach(function (x, k) {
+            var caja = h('div', { class: 'horario' });
+            if (hs.length > 1) caja.appendChild(h('button', { type: 'button', class: 'quitar-h', 'aria-label': 'Quitar este horario', title: 'Quitar este horario', onclick: function () { hs.splice(k, 1); dibujar(); } }, svg('cerrar')));
+            caja.appendChild(h('div', { class: 'fila2' }, [
+              h('label', {}, ['Cuándo', h('select', { onchange: function () { x.f = this.value; if (x.f === 'cada-hora' && !x.desde) { x.desde = '09:00'; x.hasta = '22:00'; } dibujar(); } }, HORARIO_OPC.map(function (o) { return h('option', { value: o[0], selected: o[0] === x.f }, o[1]); }))]),
+              seRepite(x) ? null : h('label', {}, ['A qué hora', h('input', { type: 'time', value: x.hora, onchange: function () { x.hora = this.value || '09:00'; dibujar(); } })])
             ]));
-            cont.appendChild(h('p', {}, x.desde && x.hasta ? 'Solo dentro de esa franja.' : 'Sin «Desde» y «Hasta», a cualquier hora.'));
-          }
+            if (seRepite(x)) caja.appendChild(h('div', { class: 'fila2' }, [
+              h('label', {}, ['Desde', h('input', { type: 'time', value: x.desde, onchange: function () { x.desde = this.value; if (x.desde && !x.hasta) x.hasta = '22:00'; dibujar(); } })]),
+              h('label', {}, ['Hasta', h('input', { type: 'time', value: x.hasta, onchange: function () { x.hasta = this.value; if (x.hasta && !x.desde) x.desde = '09:00'; dibujar(); } })])
+            ]));
+            caja.appendChild(h('div', { class: 'etiqueta-dias' }, [h('span', {}, 'Qué días'),
+              h('div', { class: 'dias-sel' }, ORDEN_DIAS.map(function (n) {
+                var on = x.dias.indexOf(n) >= 0;
+                return h('button', { type: 'button', class: on ? 'on' : '', 'aria-pressed': on ? 'true' : 'false', 'aria-label': DIAS[n].charAt(0).toUpperCase() + DIAS[n].slice(1), title: DIAS[n].charAt(0).toUpperCase() + DIAS[n].slice(1), onclick: function () {
+                  x.dias = on ? x.dias.filter(function (d) { return d !== n; }) : x.dias.concat([n]); dibujar();
+                } }, INI_DIA[n]);
+              })),
+              h('div', { class: 'atajos' }, [
+                h('button', { type: 'button', onclick: function () { x.dias = ORDEN_DIAS.slice(); dibujar(); } }, 'Todos'),
+                h('button', { type: 'button', onclick: function () { x.dias = [1, 2, 3, 4, 5]; dibujar(); } }, 'De lunes a viernes')
+              ])]));
+            if (seRepite(x)) caja.appendChild(h('p', {}, x.desde && x.hasta ? 'Se lanza cada hora en punto, de ' + sinCero(x.desde) + ' a ' + sinCero(x.hasta) + ' (las dos horas incluidas).' : 'Sin «Desde» y «Hasta», se lanza a cualquier hora del día.'));
+            cont.appendChild(caja);
+          });
+          cont.appendChild(h('button', { type: 'button', class: 'btn suave', style: 'align-self:flex-start', onclick: function () { hs.push({ f: 'hora', dias: [5], hora: '18:00', desde: '', hasta: '' }); dibujar(); } }, [svg('mas'), 'Añadir otro horario']));
+          cont.appendChild(h('div', { class: 'etiqueta-dias' }, [h('span', {}, 'Dónde se ejecuta'),
+            h('div', { class: 'segmento' }, [['en tu ordenador', 'En tu ordenador'], ['en la nube', 'En la nube']].map(function (o) {
+              return h('button', { type: 'button', class: donde === o[0] ? 'on' : '', onclick: function () { donde = o[0]; dibujar(); } }, o[1]);
+            })),
+            h('p', { style: 'margin:0' }, donde === 'en la nube' ? 'Se lanza aunque tu ordenador esté apagado, pero no puede usar los archivos ni las skills de tu ordenador.' : 'Solo se lanza si tu ordenador está encendido y Claude abierto; puede usar tus archivos y tus skills.')]));
         } else {
           cont.appendChild(h('label', {}, ['Qué tiene que pasar', h('select', { onchange: function () { clase = this.value; dibujar(); } }, [['correo', '✉️ Llega un correo que…'], ['skill', '🔗 Termina otra skill'], ['otro', '⚡ Otra cosa']].map(function (o) { return h('option', { value: o[0], selected: o[0] === clase }, o[1]); }))]));
           if (clase === 'correo') {
@@ -624,7 +687,7 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
             cont.appendChild(h('label', {}, ['O escríbelo tú', h('input', { type: 'text', placeholder: 'Al subir una foto a mi carpeta de tickets', onchange: function () { if (this.value.trim()) { ev = this.value.trim(); dibujar(); } } })]));
           }
         }
-        var resumen = h('div', { class: 'resumen' }, [svg(tipo === 'hora' ? 'reloj' : clase === 'correo' ? 'sobre' : clase === 'skill' ? 'cadena' : 'evento'), h('span', {}, texto())]);
+        var resumen = h('div', { class: 'resumen' }, [svg(tipo === 'hora' ? 'reloj' : clase === 'correo' ? 'sobre' : clase === 'skill' ? 'cadena' : 'evento'), h('span', {}, tipo !== 'hora' || hs.every(function (u) { return u.dias.length; }) ? texto() : 'Elige al menos un día en cada horario')]);
         cont.appendChild(resumen);
       }
       dibujar();
@@ -633,11 +696,15 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
           h('button', { class: 'btn suave', onclick: cerrar }, 'Cancelar'),
           h('button', { class: 'btn principal', onclick: function () {
             var d;
-            if (tipo === 'hora') d = { tipo: 'hora', texto: texto(), frecuencia: x.f, dia: x.dia, hora: x.hora, cada: x.cada, dias: x.dias, desde: x.desde, hasta: x.hasta, cron: cronHorario(x) };
+            if (tipo === 'hora') {
+              if (hs.some(function (u) { return !u.dias.length; })) return avisar('Elige al menos un día en cada horario');
+              var cr = cronesHorarios(hs);
+              d = { tipo: 'hora', texto: texto(), horarios: hs.map(function (u) { return { frecuencia: u.f, dias: ordenarDias(u.dias), hora: u.hora, desde: seRepite(u) ? u.desde : '', hasta: seRepite(u) ? u.hasta : '' }; }), crons: cr, cron: cr[0] };
+            }
             else if (clase === 'correo') { if (!cond) return avisar('Escribe qué tiene que tener el correo'); d = { tipo: 'correo', condicion: cond, texto: texto(), cron: '0 * * * *' }; }
             else if (clase === 'skill') { if (!trasSkill) return avisar('Elige la skill'); d = { tipo: 'skill', skill: trasSkill, texto: texto() }; }
             else d = { tipo: 'evento', texto: ev };
-            cerrar(); alGuardar(d);
+            cerrar(); alGuardar(d, donde);
           } }, 'Guardar')
         ])];
     });
@@ -754,12 +821,12 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
   // Programar: crea una rutina que lanza una skill (o lo que el cliente escriba) a una hora o cuando pasa algo.
   function programarSkill(s, libre) {
     if (!puente) return sinPuente();
-    editarDisparador(s ? 'Programar «' + tit(s) + '»' : '¿Cuándo se lanza?', null, function (disp) {
-      var r = { id: uid(), nombre: s ? tit(s) : libre, que: s ? (s.para || '') : libre, activa: true, disparador: disp, cuando: disp.texto, donde: 'en tu ordenador', skill: s ? s.nombre : null, pendiente: 'crear' };
+    editarDisparador(s ? 'Programar «' + tit(s) + '»' : '¿Cuándo se lanza?', null, function (disp, donde) {
+      var r = { id: uid(), nombre: s ? tit(s) : libre, que: s ? (s.para || '') : libre, activa: true, disparador: disp, cuando: disp.texto, donde: donde || 'en tu ordenador', skill: s ? s.nombre : null, pendiente: 'crear' };
       D.rutinas.push(r); if (s) s.programada = disp.texto; guardar(); pintar();
-      apuntarCambio({ que: 'crear-tarea-programada', rutina: r.id, nombre: r.nombre, skill: r.skill, texto: s ? null : libre, disparador: disp });
+      apuntarCambio({ que: 'crear-tarea-programada', rutina: r.id, nombre: r.nombre, skill: r.skill, texto: s ? null : libre, disparador: disp, donde: r.donde });
       avisar('Programada: ' + disp.texto);
-    }, s && s.nombre);
+    }, s && s.nombre, 'en tu ordenador');
   }
   // Elegir una skill de la lista o decirlo con tus palabras. Lo usan «Nueva rutina» y «Al terminar…».
   function elegirSkill(titulo, ayuda, previo, excluir, alElegir, extra) {
@@ -796,7 +863,7 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
   }
   function nuevaRutina() {
     if (!puente) return sinPuente();
-    elegirSkill('Nueva rutina', 'Después eliges cuándo se lanza: a una hora o cuando pasa algo.', null, null, function (n, t) {
+    elegirSkill('Nueva rutina', 'Después eliges los días de la semana y la hora.', null, null, function (n, t) {
       programarSkill(n ? skillPorNombre(n) : null, t);
     });
   }
@@ -864,7 +931,7 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
       ]));
     });
     nodo.appendChild(h('div', { class: 'titulo-seccion' }, [h('h2', {}, 'Tus rutinas'), h('button', { class: 'btn', onclick: nuevaRutina }, [svg('mas'), 'Nueva rutina'])]));
-    nodo.appendChild(h('p', { class: 'sub' }, 'Tareas que Claude lanza solo: con horario, cuando llega un correo o cuando termina otra skill. Con ▶ la lanzas ahora, con el lápiz cambias cuándo y con el interruptor la pausas.'));
+    nodo.appendChild(h('p', { class: 'sub' }, 'Tareas que Claude lanza solo, los días de la semana y a la hora que elijas. Con ▶ la lanzas ahora, con el lápiz cambias cuándo y con el interruptor la pausas.'));
     if (!rs.length) nodo.appendChild(h('div', { class: 'vacio' }, 'Aún no hay rutinas. Pulsa «Programar» en una skill.'));
     else nodo.appendChild(h('div', { class: 'rejilla' }, rs.map(function (r) {
       var tp = r.disparador.tipo || 'hora';
@@ -872,18 +939,19 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
       var etqDisp = { hora: 'Con horario', correo: 'Cuando llega un correo', skill: 'Al terminar otra skill' }[tp] || 'Cuando pasa algo';
       function editar() {
         if (!puente) return sinPuente();
-        editarDisparador('¿Cuándo se lanza?', r.disparador, function (disp) {
-          r.disparador = disp; r.cuando = disp.texto; r.pendiente = r.pendiente || 'cambiar';
+        editarDisparador('¿Cuándo se lanza?', r.disparador, function (disp, donde) {
+          r.disparador = disp; r.cuando = disp.texto; r.donde = donde; r.pendiente = r.pendiente || 'cambiar';
           var s = D.skills.filter(function (x) { return x.nombre === r.skill; })[0]; if (s) s.programada = disp.texto;
-          guardar(); pintar(); apuntarCambio({ que: 'cambiar-disparador', rutina: r.id, nombre: r.nombre, tarea_id: r.tarea_id || null, disparador: disp });
-          avisar('Ahora: ' + disp.texto);
-        }, r.skill);
+          guardar(); pintar(); apuntarCambio({ que: 'cambiar-disparador', rutina: r.id, nombre: r.nombre, tarea_id: r.tarea_id || null, disparador: disp, donde: donde });
+          avisar('Ahora: ' + disp.texto + ' · ' + donde);
+        }, r.skill, r.donde);
       }
       return h('div', { class: 'tarjeta rutina' + (r.activa ? '' : ' apagada') }, [
         h('div', { class: 'disparo' }, [h('div', { class: 'logo' }, svg(ico)), h('div', {}, [h('small', {}, etqDisp), h('b', {}, r.disparador.texto || r.cuando), (r.disparador.comprueba || (tp === 'correo' ? 'cada hora' : '')) ? h('span', { class: 'comprueba' }, 'Claude lo mira ' + (r.disparador.comprueba || 'cada hora')) : null])]),
         h('div', { class: 'texto-rutina' }, [h('h3', {}, r.nombre), h('p', {}, r.que && r.que !== r.nombre ? r.que : '')]),
         h('div', { class: 'pie-rutina' }, [
           r.skill ? h('span', { class: 'etq mono' }, r.skill) : null,
+          h('span', { class: 'etq' }, r.donde === 'en la nube' ? 'En la nube' : 'En tu ordenador'),
           r.pendiente ? h('span', { class: 'pendiente-aviso', title: 'Pulsa «Copiar a Claude» arriba para que lo aplique' }, [h('i', { class: 'punto pendiente' }), 'Por aplicar']) : null,
           h('button', { class: 'mas primero', 'aria-label': 'Ejecutar ahora ' + r.nombre, title: 'Ejecutar ahora (copia el texto para Claude)', onclick: function () { ejecutarAhora(r); } }, svg('play')),
           h('button', { class: 'mas', 'aria-label': 'Cambiar cuándo', title: 'Cambiar cuándo', onclick: editar }, svg('lapiz')),

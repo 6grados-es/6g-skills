@@ -13,10 +13,11 @@ Tres pestañas, una por nivel: **Conectores** (nivel 1), **Skills y rutinas** (n
 6. Al terminar: arranca el puente (`node servidor.mjs` en segundo plano, si no está ya), abre http://localhost:4700 y di en dos líneas qué has puesto.
 7. **Mantener al día**, sin que te lo pidan: cuando la persona conecte algo, cree una skill, programe una tarea o monte una app, añade su línea. **Cada artefacto que crees** se añade a `apps` con `tipo: "artefacto"`, su `url` y la `fecha` (dd-mmm). **No toques `visibles`** (qué pestañas se enseñan: la persona lo cambia en «Configuración»). **Nunca vuelvas a añadir lo que esté en `quitadas`** (misma `url` o mismo nombre): la persona lo quitó del panel. Al poner al día los conectores, **no pises `alias`** (el nombre que la persona le puso a una cuenta).
 8. **Aplicar los cambios hechos en la web**: la web guarda en `cambios.json` lo que solo puede hacer Claude y la persona te lo pasa con el botón «Copiar a Claude» (un texto con la lista). También cuando diga «aplica los cambios de mi plataforma». Aplica cada línea con `hecho: false`:
-   - `cambiar-disparador`, `activar-tarea`, `pausar-tarea`: en la tarea programada de la app de Claude (`tarea_id`; si no lo hay, búscala por nombre). `disparador.cron` es la hora en formato cron.
-   - `crear-tarea-programada`: crea la tarea que lanza esa skill (`skill`) o hace lo que dice `texto`, con ese disparador, y guarda su `tarea_id` en la rutina.
-   - Disparador `correo` («Al llegar un correo que pide una factura»): una tarea programada **cada hora** (`cron: "0 * * * *"`) que lee los correos nuevos y, solo si alguno cumple `condicion`, lanza la skill. Si no hay correo así, no hace nada.
-   - Disparador `skill` («Al terminar X»): no es una tarea programada; añade al final del `SKILL.md` de `disparador.skill` el paso «al terminar, usa la skill …».
+   - `cambiar-disparador`, `activar-tarea`, `pausar-tarea`: en la tarea programada (`tarea_id`; si no lo hay, búscala por nombre). `disparador.crons` son los horarios en formato cron (uno por cada horario: p. ej. lunes a las 9 y viernes a las 18 son dos crons de una misma rutina; `disparador.cron` es el primero).
+   - `crear-tarea-programada`: crea la tarea que lanza esa skill (`skill`) o hace lo que dice `texto`, con esos horarios, y guarda su `tarea_id` en la rutina.
+   - **Dónde se ejecuta (`donde`)**: `en tu ordenador` = tarea programada local de la app de Claude (solo corre con el ordenador encendido y Claude abierto, y usa los archivos y skills del ordenador); `en la nube` = rutina en la nube de Claude (corre aunque el ordenador esté apagado, pero no ve archivos ni skills locales: si la skill vive solo en el ordenador, avísale a la persona antes de moverla). Si cambia `donde`, crea la tarea en el sitio nuevo, comprueba que está y borra la del sitio viejo (con el ok de la persona); apunta el nuevo `tarea_id`.
+   - **Por ahora las rutinas solo se programan en el calendario** (disparador `hora`): días de la semana y hora, o cada hora dentro de una franja. Si la persona quiere «cuando llegue un correo que pida una factura», se hace como una rutina «cada hora» (`frecuencia: "cada-hora"`) cuya skill mira el correo y, solo si hay un caso así, lanza la skill que toca; apúntalo en `disparador.comprueba`. Los tipos `correo`, `skill` y `evento` solo existen en datos viejos y se siguen enseñando, pero no se crean nuevos.
+   - Una skill que lance otra al terminar (`encadenar-skill`, abajo) sigue permitida: no es una tarea programada.
    - `encadenar-skill`: añade como último paso del `SKILL.md` de `skill` que lance `despues` (o lo que diga `texto`, que puede tener condiciones: «si es una factura, lanza la de facturas»). `quitar-encadenado`: quita ese paso.
    - Cambios viejos `eliminar-artefacto`: no borres nada; márcalos como hechos.
    Después marca cada una con `hecho: true`, quita `pendiente` (de la rutina o de `despues` en la skill) en `datos.js` y di en una línea qué has aplicado.
@@ -34,7 +35,7 @@ window.PLATAFORMA = {
   areas: { "Clientes": "🤝", "Correo": "✉️" },
   conectores: [ { servicio, logo, imagen, icono, para, cuentas: [ { cuenta, alias, tipo, estado } ] } ],
   skills:     [ { nombre, titulo, area, icono, logo, para, palabras, barra, activada, programada, estado, llama_a, ruta, despues: { skill, texto, pendiente } } ],
-  rutinas:    [ { id, nombre, que, activa, disparador: { tipo: "hora"|"correo"|"skill"|"evento", texto, cron, condicion, skill }, donde, skill, tarea_id, pendiente } ],
+  rutinas:    [ { id, nombre, que, activa, disparador: { tipo: "hora", texto, horarios: [ { frecuencia, dias, hora, desde, hasta } ], crons, cron, comprueba }, donde: "en tu ordenador"|"en la nube", skill, tarea_id, pendiente } ],
   apps:       [ { nombre, logo, imagen, figura, para, tipo, url, abrir, estado, fecha } ],
   visibles:   { conectores: true, skills: true, apps: true },   // lo cambia la persona en «Configuración»; no lo toques
   quitadas:   [ { nombre, url, tipo, fecha } ]
@@ -53,8 +54,8 @@ window.PLATAFORMA = {
 - `despues`: la skill que lanza al terminar (encadenada), si la hay; `llama_a` son las que usa por dentro.
 - Solo son rutinas las que se lanzan solas. Lo que la persona lanza a mano («cuando lo pides») no es una rutina: es una skill sin programar.
 - Si algo «cuando pasa algo» en realidad lo mira Claude cada cierto tiempo (por ejemplo, cada hora busca reuniones terminadas), ponlo en `disparador.comprueba` («cada hora»): la tarjeta dice «Claude lo mira cada hora».
-- `rutinas`: tareas programadas. `disparador.tipo`: `hora` (con horario: `frecuencia` dia|laborables|semana|cada-hora|minutos, `hora`, `dia`, `cada` en minutos, `dias` todos|laborables, `desde` y `hasta` para la franja, su `texto` y su `cron`), `correo` («Al llegar un correo que pide una factura», con `condicion` y cron horario), `skill` («Al terminar «Resumen de reunión»», con `skill`) o `evento` (otra cosa, en texto). `activa`: si está en marcha. `tarea_id`: el id de la tarea programada en la app de Claude, si lo es.
-- Patrón común que conviene proponer: una rutina de correo que, según lo que llega, lanza la skill que toca (factura → enviar factura).
+- `rutinas`: tareas programadas, solo en el calendario. `disparador`: `{ tipo: "hora", texto, horarios: [ { frecuencia: "hora"|"cada-hora", dias: [1..5] (1 lunes … 6 sábado, 0 domingo), hora: "09:00" (si es «hora»), desde y hasta: "09:00"/"22:00" (si es «cada-hora»: cada hora en punto, las dos horas incluidas) } ], crons: ["0 9 * * 1"], cron, comprueba }`. Un solo `horarios` basta para «cada lunes a las 9»; para «lunes a las 9 y viernes a las 18» son dos. `texto` es la frase en llano que ve la persona («Cada lunes a las 9:00 y cada viernes a las 18:00»). `donde`: `en tu ordenador` o `en la nube`. `activa`: si está en marcha. `tarea_id`: el id de la tarea en la app de Claude o en la nube.
+- Patrón común que conviene proponer: una rutina «cada hora» que mira el correo y, según lo que llega, lanza la skill que toca (factura → enviar factura).
 
 ### Apps
 - `tipo`: web, app de escritorio, móvil… o `artefacto` (salen aparte, en el filtro «Artefactos», en lista).
