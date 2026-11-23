@@ -102,7 +102,7 @@ Antes de AÑADIR un tema, un informar o un siguiente paso, decide a qué reunió
 2. **Confirma antes de crear** en una línea: título, fecha y hora, equipo y cuántas casillas se arrastran de la anterior.
 3. Con el comando: `crear <tipo> --dia D --hora HH:MM`. Hace todo:
    - no duplica si ya existe;
-   - monta la **plantilla del tipo** (`plantilla` en `tipos.json`): las secciones en su orden, los apartados («Puntos fijos», «Temas nuevos»…) y los puntos fijos con su enlace. La Daily y la Weekly llevan «Plaud grabando», Puntos fijos (embudo, oferta, rocas; la Weekly, también vídeos), Parking y Aparcados y mejoras; la Weekly, además, Celebración, Resumen de la semana y Postmoto;
+   - monta la **plantilla del tipo** (`plantilla` en `tipos.json`): las secciones en su orden, los apartados («Puntos fijos», «Temas nuevos»…) y los puntos fijos con su enlace. La Daily lleva «Plaud grabando», Puntos fijos (embudo, oferta, rocas), Parking y Aparcados y mejoras; la Weekly no lleva puntos fijos en Temas (Weekly 23-nov) y sí Celebración, Resumen de la semana (CRM, rocas, cumplimiento y vídeos), Postmoto y Nueva semana (solo el enlace a las rocas, sin caja para añadir), Parking y Aparcados;
    - copia a «Revisar» lo sin marcar de la anterior (sus Siguientes pasos y lo de su Revisar que nadie resolvió), sin repetir;
    - **arrastra** el Parking y los Aparcados de la anterior (también el apartado «Parking» de Temas);
    - la «anterior» es la de su **cadena**: la Daily y la Weekly se siguen la una a la otra (`cadena` en `tipos.json`);
@@ -183,7 +183,7 @@ Se pueden hacer en cualquier reunión, como marcar.
   - Manda la copia más reciente (regla en `formato.md`).
 - **«Qué quedó pendiente de la anterior»**: `leer <tipo>` y mira el «Revisar» de la de hoy, de todas las personas. Si hoy aún no hay reunión, los «Siguientes pasos» sin marcar de la anterior.
 - Salida: lista numerada `1. Santi - texto · para el 2026-11-18 · Daily de producto 2026-11-18 · <enlace>`, agrupada por reunión, con la fecha (di cuáles están vencidas) y las veces pasada. Cierra con «¿Marco alguna como hecha? Dime los números.».
-- **«Cómo vamos de cumplimiento»**: `cumplimiento [--semanas N]`. De lo revisado en cada reunión, cuánto estaba hecho y cuánto se pasó a otro día o se aparcó: equipo, por persona y por semana. Cuenta desde el 15-nov-2026.
+- **«Cómo vamos de cumplimiento»**: `cumplimiento [--semanas N]`. De lo revisado en cada reunión, cuánto estaba hecho y cuánto se pasó a otro día o se aparcó: equipo, por persona y por semana. Cuenta desde el 15-nov-2026. Da también el % **sin las mejoras de Reuniones** (to-dos que hablan de reuniones, temas, siguientes pasos, puntos fijos, menú lateral, resumen…), para que el cumplimiento mida el trabajo de cada uno (Santi, Weekly 23-nov). En la web, el Resumen de la semana de la Weekly se despliega por persona con cada línea y su reunión, y explica cómo se calcula; en Tareas hay un filtro «Mejoras de Reuniones».
 
 ### TRANSCRIPCIÓN
 
