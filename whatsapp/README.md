@@ -1,4 +1,4 @@
-# Skill «whatsapp» (versión 2.1.1)
+# Skill «whatsapp» (versión 2.2.1)
 
 Con esta skill, Claude puede trabajar con tu WhatsApp:
 
@@ -81,6 +81,10 @@ Si prefieres un servicio externo (más rápido en ordenadores lentos), se puede 
 ## Para quien mantiene la skill
 
 `SKILL.md` es lo que lee Claude. Código en `scripts/`; tests con `node --test tests/<fichero>.test.mjs` (de uno en uno). `references/pruebas.md` dice qué está probado y qué no. La librería va copiada y adaptada en `scripts/vendor/` (ver su `NOTICE-6grados.md`).
+
+### Qué cambia en la 2.2.1
+
+- Arreglo: desde el 23-nov-2026 no salía el QR al enlazar ni arrancaba la lectura («Waiting failed: 30000ms exceeded»). WhatsApp Web cambió su página de inicio de sesión y la librería no la entiende todavía. La skill carga ahora una versión anterior de WhatsApp Web, fijada y comprobada con su huella (`scripts/lib/version-web.mjs`); el instalador la deja preparada. Si ya tenías la skill, vuelve a lanzar `node instalar.mjs`: no toca tu sesión.
 
 ### Qué cambia en la 2.2.0
 

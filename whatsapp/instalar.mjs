@@ -88,6 +88,19 @@ else {
   }
 }
 
+// Versión de WhatsApp Web fijada (25-nov-2026): sin ella no sale el QR (ver scripts/lib/version-web.mjs).
+try {
+  const vw = await import(pathToFileURL(join(SCRIPTS, 'lib', 'version-web.mjs')).href);
+  if (SOLO_COMPROBAR) {
+    if (vw.versionWeb()) ok(`versión de WhatsApp Web fijada lista (${vw.VERSION_WEB_FIJADA})`);
+    else { mal('falta la versión de WhatsApp Web fijada: repite `node instalar.mjs` (la baja, ~1 MB)'); hayError = true; }
+  } else {
+    const r = await vw.asegurarVersionWeb();
+    if (r.ok) ok(`versión de WhatsApp Web fijada lista (${vw.VERSION_WEB_FIJADA}${r.motivo === 'bajada' ? ', bajada ahora' : ''})`);
+    else { mal(`versión de WhatsApp Web: ${r.motivo}. Sin ella no sale el QR al enlazar; repite con internet`); hayError = true; }
+  }
+} catch (e) { mal(`no pude preparar la versión de WhatsApp Web: ${e.message}`); hayError = true; }
+
 // ffmpeg y clave de transcripción (opcionales: sin ellos se lee y se descarga igual)
 try {
   const t = await import(pathToFileURL(join(SCRIPTS, 'lib', 'transcribir.mjs')).href);

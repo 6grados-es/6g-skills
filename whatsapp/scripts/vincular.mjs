@@ -31,6 +31,7 @@ import { existsSync, renameSync, rmSync } from 'fs';
 import { execFile } from 'child_process';
 import { tmpdir } from 'os';
 import { dirSesion, dirCacheWeb, asegurar } from './lib/rutas.mjs';
+import { asegurarVersionWeb } from './lib/version-web.mjs';
 import { escribirPagina } from './lib/qr-pagina.mjs';
 import { tomarBloqueo } from './lib/bloqueo.mjs';
 import { limpiarPestanasRestauradas } from './lib/perfil.mjs';
@@ -72,8 +73,12 @@ process.on('unhandledRejection', (e) => err('[guarda] unhandledRejection tragado
 process.on('uncaughtException', (e) => err('[guarda] uncaughtException tragado:', e?.message || e));
 
 try { limpiarPestanasRestauradas(SESION); } catch (e) { err(`[perfil] no pude limpiar las pestañas guardadas: ${e.message}`); }
+// Versión de WhatsApp Web fijada: sin ella no sale el QR desde el 23-nov-2026 (ver lib/version-web.mjs).
+const VW = await asegurarVersionWeb();
+if (!VW.ok) err(`[version-web] ${VW.motivo}; pruebo con la versión de hoy`);
 const client = new Client({
   authStrategy: new LocalAuth({ clientId: CLIENT_ID, dataPath: dirSesion() }),
+  webVersion: VW.version,
   webVersionCache: { type: 'local', path: dirCacheWeb() },
   puppeteer: { headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] },
 });
