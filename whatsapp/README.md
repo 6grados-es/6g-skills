@@ -1,4 +1,4 @@
-# Skill «whatsapp» (versión 2.2.1)
+# Skill «whatsapp» (versión 2.3.0)
 
 Con esta skill, Claude puede trabajar con tu WhatsApp:
 
@@ -81,6 +81,11 @@ Si prefieres un servicio externo (más rápido en ordenadores lentos), se puede 
 ## Para quien mantiene la skill
 
 `SKILL.md` es lo que lee Claude. Código en `scripts/`; tests con `node --test tests/<fichero>.test.mjs` (de uno en uno). `references/pruebas.md` dice qué está probado y qué no. La librería va copiada y adaptada en `scripts/vendor/` (ver su `NOTICE-6grados.md`).
+
+### Qué cambia en la 2.3.0
+
+- **El mensaje se abre con el contacto ya puesto**, como un enlace wa.me: si la persona no está en tus personas frecuentes (o está guardada sin teléfono), la skill busca su número en los contactos de la app de WhatsApp de tu Mac, en local y sin abrir la sesión. Antes, en esos casos te lo abría para que eligieras el contacto a mano.
+- Abrir sin contacto ya solo pasa si lo pides tú.
 
 ### Qué cambia en la 2.2.1
 
