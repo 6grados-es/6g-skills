@@ -70,6 +70,16 @@ button.marca-logo:hover .cambiar, button.marca-logo:focus-visible .cambiar { opa
 .puente { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--tinta-2); line-height: 1.35; padding: 10px 12px; border-radius: 12px; background: var(--gris); }
 .puente i { width: 8px; height: 8px; border-radius: 50%; background: var(--tinta-3); flex: none; margin-top: 4px; }
 .puente.on i { background: var(--ok); }
+.puente.off i { background: var(--mal); }
+.ceja-fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; }
+.ceja-fila .ceja { margin: 0; }
+.conexion { display: none; align-items: center; gap: 6px; font-size: 12px; color: var(--tinta-2); background: var(--gris); border-radius: 999px; padding: 4px 10px 4px 8px; white-space: nowrap; }
+.conexion i { width: 8px; height: 8px; border-radius: 50%; background: var(--tinta-3); }
+.conexion.on i { background: var(--ok); } .conexion.off i { background: var(--mal); }
+.banda.apagado { border-color: var(--mal); }
+.qr { display: flex; justify-content: center; align-items: center; min-height: 200px; background: #fff; border-radius: 12px; padding: 12px; color: #111; font-size: 13px; }
+.qr svg { width: 220px; height: 220px; max-width: 100%; }
+.dialogo .aviso-llave { font-size: 12.5px; }
 .tema { border: 1px solid var(--linea-fuerte); background: none; border-radius: 999px; padding: 8px 14px; font-size: 13px; display: inline-flex; gap: 8px; align-items: center; justify-content: center; }
 .tema:hover { background: var(--gris); }
 .tema svg { width: 16px; height: 16px; flex: none; }
@@ -243,6 +253,7 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
   .marca { padding: 0 4px; flex: 1 1 auto; }
   .pie-menu { margin: 0; flex-direction: row; align-items: center; padding: 0; }
   .puente, .fecha { display: none; }
+  .conexion { display: inline-flex; }
   .tema { padding: 7px 10px; } .tema span { display: none; }
   .navs { display: flex; width: 100%; gap: 4px; order: 3; }
   .item { flex: 1 1 0; min-width: 0; justify-content: center; padding: 8px 6px; }
@@ -412,6 +423,7 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
   function uid() { return Math.random().toString(36).slice(2, 9); }
 
   // ---------- datos (admite también la forma antigua) ----------
+  function normalizar() {
   D.marca = D.marca || {};
   D.desbloqueado = Object.assign({ conectores: false, skills: false, apps: false }, D.desbloqueado || {});
   D.conectores = (D.conectores || []).map(function (c) {
@@ -426,6 +438,8 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
   });
   D.apps.forEach(function (a) { if (!a.id) a.id = uid(); });
   D.quitadas = D.quitadas || [];
+  }
+  normalizar();
   function tit(s) { return s ? (s.titulo || s.nombre) : ''; }
   function skillPorNombre(n) { return D.skills.filter(function (x) { return x.nombre === n; })[0]; }
 
@@ -441,10 +455,24 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
   if (!vis) { try { vis = JSON.parse(localStorage.getItem('plataforma-visibles') || 'null'); } catch (e) {} }
   function visible(id) { return !vis || vis[id] !== false; }
   function pestanasVisibles() { var v = PASOS.filter(function (p) { return visible(p.id); }); return v.length ? v : PASOS; }
+  // Emparejar este navegador (por ejemplo, el móvil) con el ordenador: el enlace de «Abrir en el móvil» trae la llave detrás del «#»
+  // (no sale del navegador). Se guarda aquí y se quita de la barra de direcciones.
+  var LLAVE_RE = /^plat\.[a-z0-9]{12}\.[A-Za-z0-9_-]{32}$/, llave = null;
+  var mLlave = (location.hash || '').match(/llave=([^&]+)/);
+  if (mLlave && LLAVE_RE.test(decodeURIComponent(mLlave[1]))) {
+    llave = decodeURIComponent(mLlave[1]);
+    try { localStorage.setItem('plataforma-llave', llave); } catch (e) {}
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  }
+  if (!llave) { try { var guardada = localStorage.getItem('plataforma-llave'); if (guardada && LLAVE_RE.test(guardada)) llave = guardada; } catch (e) {} }
   var actual = params.get('pestana') || (location.hash || '').replace('#', '');
   if (!pestanasVisibles().some(function (p) { return p.id === actual; })) actual = (pestanasVisibles().filter(function (p) { return desb[p.id]; })[0] || pestanasVisibles()[0]).id;
   var filtroCon = 'todos', filtroApps = params.get('artefactos') === '1' ? 'artefactos' : 'apps';
   var puente = false, pendientes = 0, listaCambios = [], carpeta = '', busca = '';
+  // Modo remoto: la web publicada (sin puente local) con llave. `remoto.conectado`: el ordenador ha dado señales hace poco.
+  var versionDatos = null, infoRemota = null;      // en local: versión de datos.js y si este ordenador está emparejado
+  var remoto = null;                               // { conectado, visto, estado, ordenes, cargado }
+  var PUENTE_WEB = (D.puente || 'https://plataforma-puente.vercel.app').replace(/\/$/, '');
   var tema = 'claro';
   try { tema = localStorage.getItem('plataforma-tema') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro'); } catch (e) {}
   if (params.get('tema')) tema = params.get('tema');
@@ -460,9 +488,136 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
     return fetch(ruta, { method: cuerpo ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json' }, body: cuerpo ? JSON.stringify(cuerpo) : undefined })
       .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || r.status); return j; }); });
   }
+  function estadoLocal(j) {
+    listaCambios = j.lista || []; pendientes = listaCambios.length; carpeta = j.carpeta || ''; infoRemota = j.remoto || null;
+  }
   function comprobarPuente() {
-    if (location.protocol === 'file:') return;
-    api('/api/estado').then(function (j) { puente = true; listaCambios = j.lista || []; pendientes = listaCambios.length; carpeta = j.carpeta || ''; pintar(); }).catch(function () {});
+    if (location.protocol === 'file:') return arrancarRemoto();
+    api('/api/estado').then(function (j) {
+      puente = true; versionDatos = j.version || null; estadoLocal(j); pintar();
+      setInterval(refrescarLocal, 8000);
+    }).catch(arrancarRemoto);
+  }
+  // En local, si datos.js cambia por debajo (Claude, o una orden que llegó desde el móvil), se recarga solo.
+  function ocupado() { return document.querySelector('.velo, .menu-flot, input.renombrar') || document.hidden; }
+  function refrescarLocal() {
+    if (ocupado()) return;
+    api('/api/estado').then(function (j) {
+      estadoLocal(j);
+      if (j.version && versionDatos && j.version !== versionDatos) return recargarDatos();
+      pintar();
+    }).catch(function () {});
+  }
+  function recargarDatos() {
+    return api('/api/datos').then(function (j) { D = j.datos; versionDatos = j.version; normalizar(); pintar(); });
+  }
+
+  // ---------- puente web: la plataforma publicada (también en el móvil) manda órdenes al ordenador ----------
+  var base = null, enVuelo = [], tRemoto = null;
+  function apiRemota(ruta, cuerpo) {
+    return fetch(PUENTE_WEB + ruta, { method: cuerpo ? 'POST' : 'GET', headers: Object.assign({ 'X-Plataforma-Llave': llave }, cuerpo ? { 'Content-Type': 'application/json' } : {}), body: cuerpo ? JSON.stringify(cuerpo) : undefined, cache: 'no-store' })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { var e = new Error(j.error || r.status); e.status = r.status; throw e; } return j; }); });
+  }
+  function arrancarRemoto() {
+    if (!llave) return;
+    base = { apps: D.apps.slice(), quitadas: D.quitadas.slice() };
+    remoto = { conectado: false, visto: null, estado: null, ordenes: [], cargado: false };
+    pintar(); leerRemoto();
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) leerRemoto(); });
+  }
+  function leerRemoto() {
+    clearTimeout(tRemoto);
+    if (!llave || puente) return;
+    if (document.hidden) { tRemoto = setTimeout(leerRemoto, 10000); return; }
+    apiRemota('/api/web').then(function (j) {
+      remoto.cargado = true; remoto.visto = j.visto; remoto.estado = j.estado || remoto.estado; remoto.ordenes = j.ordenes || [];
+      remoto.conectado = !!(j.visto && Date.parse(j.ahora) - Date.parse(j.visto) < 75000);
+      revisarVuelo(); aplicarVivo(); if (!ocupado()) pintar();
+    }).catch(function (e) {
+      if (e.status === 401) { llave = null; remoto = null; try { localStorage.removeItem('plataforma-llave'); } catch (x) {} avisar('Este enlace ya no vale. Ábrelo otra vez desde tu ordenador con «Abrir en el móvil».'); pintar(); return; }
+      if (remoto) { remoto.cargado = true; remoto.conectado = false; if (!ocupado()) pintar(); }
+    }).then(function () { if (llave && !puente) tRemoto = setTimeout(leerRemoto, enVuelo.length ? 2000 : 10000); });
+  }
+  // Lo que ha pedido esta página y aún no está hecho se enseña ya hecho; si falla o caduca, vuelve atrás y se avisa.
+  function revisarVuelo() {
+    enVuelo = enVuelo.filter(function (v) {
+      var o = remoto.ordenes.filter(function (x) { return x.id === v.id; })[0];
+      if (!o) return Date.now() - v.desde < 30000;
+      if (o.estado === 'hecha') return false;
+      if (o.estado === 'error') { avisar('No se ha podido hacer en tu ordenador: ' + (o.nota || 'error')); return false; }
+      if (o.estado === 'caducada') { avisar('Tu ordenador no lo ha recogido a tiempo. Comprueba que está encendido y vuelve a intentarlo.'); return false; }
+      return true;
+    });
+  }
+  function quitadaEn(lista, a) { return (lista || []).some(function (q) { return q.nombre === a.nombre && (!q.url || q.url === (a.url || null)); }); }
+  function aplicarVivo() {
+    var e = remoto && remoto.estado;
+    if (e) {
+      D.skills.forEach(function (s) { if (e.skills && Object.prototype.hasOwnProperty.call(e.skills, s.nombre)) s.activada = !!e.skills[s.nombre]; });
+      D.rutinas.forEach(function (r) { var x = e.rutinas && e.rutinas[r.id]; if (x) { r.activa = !!x.activa; if (x.pendiente) r.pendiente = x.pendiente; else delete r.pendiente; } });
+      var vistas = {}, todas = base.apps.concat(base.quitadas.map(function (q) { return q.app; }).filter(Boolean));
+      D.apps = todas.filter(function (a) { if (vistas[a.nombre] || quitadaEn(e.quitadas, a)) return false; vistas[a.nombre] = 1; return true; });
+      D.quitadas = e.quitadas || [];
+      listaCambios = e.cambios || []; pendientes = listaCambios.length; carpeta = e.carpeta || carpeta;
+    }
+    enVuelo.forEach(function (v) { aplicarOrden(v.tipo, v.datos); });
+  }
+  function aplicarOrden(tipo, d) {
+    if (tipo === 'skill') { var s = skillPorNombre(d.nombre); if (s) s.activada = d.activada; }
+    if (tipo === 'rutina') D.rutinas.forEach(function (r) { if (r.id === d.id) r.activa = d.activa; });
+    if (tipo === 'quitar-app') D.apps = D.apps.filter(function (a) { return !(a.nombre === d.nombre && (!d.url || a.url === d.url)); });
+    if (tipo === 'restaurar-app' && !D.apps.some(function (a) { return a.nombre === d.nombre; })) {
+      var a = base.apps.concat(base.quitadas.map(function (q) { return q.app; }).filter(Boolean)).filter(function (x) { return x.nombre === d.nombre; })[0];
+      if (a) D.apps.push(a);
+    }
+  }
+  // ¿Se puede pedir algo desde aquí? En local, siempre; en remoto, si el ordenador está encendido.
+  function enRemoto() { return !puente && !!remoto; }
+  function remotoListo() {
+    if (!remoto.conectado) { avisar(remoto.cargado ? 'Tu ordenador está apagado o dormido. Enciéndelo y vuelve a intentarlo.' : 'Conectando con tu ordenador…'); return false; }
+    return true;
+  }
+  function ordenRemota(tipo, datos, aviso, deshacer) {
+    if (!remotoListo()) return;
+    var v = { id: null, tipo: tipo, datos: datos, desde: Date.now() };
+    enVuelo.push(v); aplicarOrden(tipo, datos); pintar();
+    apiRemota('/api/web', { tipo: tipo, datos: datos }).then(function (j) {
+      v.id = j.id; remoto.ordenes = j.ordenes || remoto.ordenes;
+      avisar(aviso, deshacer);
+      leerRemoto();
+    }).catch(function (e) {
+      enVuelo = enVuelo.filter(function (x) { return x !== v; }); aplicarVivo(); pintar();
+      avisar('No ha llegado a tu ordenador: ' + e.message);
+    });
+  }
+
+  // ---------- abrir en el móvil (desde el ordenador): enlace con la llave y su código QR ----------
+  function cargarQR() {
+    if (window.qrcode) return Promise.resolve();
+    return new Promise(function (ok, mal) {
+      var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+      s.onload = ok; s.onerror = mal; document.head.appendChild(s);
+    });
+  }
+  function abrirEnMovil() {
+    if (!puente) return;
+    api('/api/emparejar', {}).then(function (j) {
+      var enlace = j.enlace;
+      dialogo(function (cerrar) {
+        var caja = h('div', { class: 'qr' }, h('span', {}, 'Cargando el código…'));
+        cargarQR().then(function () {
+          var q = window.qrcode(0, 'M'); q.addData(enlace); q.make();
+          caja.innerHTML = q.createSvgTag({ cellSize: 5, margin: 2, scalable: true });
+        }).catch(function () { caja.textContent = 'Sin internet no puedo dibujar el código: copia el enlace.'; });
+        return [h('h3', {}, 'Abrir en el móvil'),
+          h('p', {}, 'Apunta la cámara del móvil a este código (o mándate el enlace). Desde ahí podrás encender y apagar skills, pausar rutinas y quitar apps, y se hará en este ordenador mientras esté encendido.'),
+          caja,
+          h('p', { class: 'aviso-llave' }, 'El enlace lleva la llave de este ordenador: no lo compartas con nadie.'),
+          h('div', { class: 'acciones' }, [
+            h('button', { class: 'btn suave', onclick: function () { copiarAClaude(enlace, 'Enlace copiado'); } }, [svg('copiar'), 'Copiar el enlace']),
+            h('button', { class: 'btn principal', onclick: cerrar }, 'Listo')])];
+      });
+    }).catch(function (e) { avisar('No se ha podido: ' + e.message); });
   }
 
   // ---------- copiar a Claude: lo que solo puede hacer Claude se le pasa en un texto listo para pegar ----------
@@ -513,12 +668,23 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
     if (!listaCambios.length) return avisar('No hay nada por aplicar.');
     copiarAClaude(textoCambios(listaCambios), 'Copiado. Pégalo en un chat de Claude y él lo aplica');
   }
-  function guardar() { if (puente) api('/api/guardar', { datos: D }).catch(function (e) { avisar('No se ha podido guardar: ' + e.message); }); }
+  // Guardar datos.js entero: solo en local, y solo si nadie lo ha cambiado desde que esta página lo leyó (si no, pisaría
+  // lo que acaba de hacer Claude o lo que se ha pedido desde el móvil). Desde la web publicada nunca se guarda entero.
+  function guardar() {
+    if (!puente) return;
+    api('/api/guardar', { datos: D, version: versionDatos }).then(function (j) { versionDatos = j.version || versionDatos; }).catch(function (e) {
+      if (/ha cambiado/.test(e.message)) recargarDatos().then(function () { avisar('Había cambios nuevos en tu plataforma y la he puesto al día. Vuelve a hacerlo.'); });
+      else avisar('No se ha podido guardar: ' + e.message);
+    });
+  }
   function apuntarCambio(c) {
     if (!puente) return;
     api('/api/cambio', { cambio: c }).then(function (j) { listaCambios = j.lista || []; pendientes = listaCambios.length; pintar(); }).catch(function () {});
   }
-  function sinPuente() { avisar('Para cambiar cosas, abre la plataforma con «Abrir plataforma» (doble clic) en su carpeta.'); }
+  function sinPuente() {
+    avisar(enRemoto() ? 'Desde aquí se encienden y apagan skills, se pausan rutinas y se quitan apps. Esto otro se cambia en tu ordenador, con «Abrir plataforma».'
+      : 'Para cambiar cosas, abre la plataforma con «Abrir plataforma» (doble clic) en su carpeta.');
+  }
 
   // ---------- aviso con deshacer ----------
   var avisoT;
@@ -832,10 +998,12 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
   }
 
   function cambiarSkill(s, valor) {
+    if (enRemoto()) return ordenRemota('skill', { nombre: s.nombre, activada: valor }, (valor ? 'Encendida: ' : 'Apagada: ') + (s.titulo || s.nombre) + ' · en tu ordenador',
+      function () { cambiarSkill(s, !valor); });
     if (!puente) return sinPuente();
     s.activada = valor; pintar();                         // al momento; se guarda por detrás
     api('/api/skill', { nombre: s.nombre, activada: valor }).then(function (j) {
-      if (j.ruta) s.ruta = j.ruta;
+      if (j.ruta) s.ruta = j.ruta; if (j.version) versionDatos = j.version;
       avisar((valor ? 'Encendida: ' : 'Apagada: ') + (s.titulo || s.nombre), function () { cambiarSkill(s, !valor); });
     }).catch(function (e) { s.activada = !valor; pintar(); avisar('No se ha podido: ' + e.message); });
   }
@@ -977,6 +1145,10 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
           h('button', { class: 'mas primero', 'aria-label': 'Ejecutar ahora ' + r.nombre, title: 'Ejecutar ahora (copia el texto para Claude)', onclick: function () { ejecutarAhora(r); } }, svg('play')),
           h('button', { class: 'mas', 'aria-label': 'Cambiar cuándo', title: 'Cambiar cuándo', onclick: editar }, svg('lapiz')),
           h('button', { class: 'interruptor' + (r.activa ? ' on' : ''), role: 'switch', 'aria-checked': r.activa ? 'true' : 'false', 'aria-label': (r.activa ? 'Pausar ' : 'Activar ') + r.nombre, onclick: function () {
+            if (enRemoto()) {
+              var pausar = function (val) { ordenRemota('rutina', { id: r.id, activa: val }, (val ? 'En marcha: ' : 'En pausa: ') + r.nombre + ' · en tu ordenador', function () { pausar(!val); }); };
+              return pausar(!r.activa);
+            }
             if (!puente) return sinPuente();
             var v = !r.activa;
             function poner(val) { r.activa = val; r.pendiente = r.pendiente || 'cambiar'; guardar(); pintar(); apuntarCambio({ que: val ? 'activar-tarea' : 'pausar-tarea', rutina: r.id, nombre: r.nombre, tarea_id: r.tarea_id || null }); }
@@ -991,6 +1163,9 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
 
   // Quitar del panel: no borra nada (la app o el artefacto siguen en su sitio). Se apunta en `quitadas` para que Claude no lo vuelva a añadir.
   function quitarApp(a) {
+    if (enRemoto()) return ordenRemota('quitar-app', { nombre: a.nombre, url: a.url || null }, 'Quitado del panel: ' + a.nombre, function () {
+      ordenRemota('restaurar-app', { nombre: a.nombre, url: a.url || null }, 'Vuelve a estar: ' + a.nombre);
+    });
     if (!puente) return sinPuente();
     var i = D.apps.indexOf(a), q = { nombre: a.nombre, url: a.url || null, tipo: a.tipo || null, fecha: new Date().toISOString().slice(0, 10) };
     D.apps.splice(i, 1); D.quitadas.push(q); guardar(); pintar();
@@ -1050,6 +1225,12 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
     raiz.textContent = '';
     var p = PASOS.filter(function (x) { return x.id === actual; })[0];
     var M = D.marca;
+    // Cómo está la conexión: local (puente en este ordenador), remota (web publicada con llave) o solo para mirar.
+    var con = puente ? { clase: 'on', largo: 'Conectada: lo que cambies se guarda', corto: '' }
+      : remoto ? (!remoto.cargado ? { clase: '', largo: 'Conectando con tu ordenador…', corto: 'Conectando…' }
+        : remoto.conectado ? { clase: 'on', largo: 'Tu ordenador está conectado: lo que cambies se hace en él', corto: 'Ordenador conectado' }
+        : { clase: 'off', largo: 'Tu ordenador está apagado o dormido: ahora solo se puede mirar', corto: 'Ordenador apagado' })
+      : { clase: '', largo: 'Solo para mirar. Para cambiar cosas, ábrela con «Abrir plataforma»', corto: '' };
     var menu = h('nav', { class: 'menu' }, [
       h('div', { class: 'marca' }, [
         h('button', { class: 'marca-logo', 'aria-label': 'Cambiar la imagen', title: 'Cambiar la imagen', onclick: function (e) { menuImagen(e.currentTarget); } }, [imagenMarca(M) ? h('img', { src: M.logo, alt: '' }) : (M.siglas || inicial(M.nombre || 'T')), h('span', { class: 'cambiar' }, svg('camara'))]),
@@ -1062,14 +1243,18 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
         ]);
       })),
       h('div', { class: 'pie-menu' }, [
-        h('div', { class: 'puente' + (puente ? ' on' : '') }, [h('i'), puente ? 'Conectada: lo que cambies se guarda' : 'Solo para mirar. Para cambiar cosas, ábrela con «Abrir plataforma»']),
+        h('div', { class: 'puente' + (con.clase ? ' ' + con.clase : '') }, [h('i'), con.largo]),
+        puente && infoRemota && infoRemota.web ? h('button', { class: 'tema', onclick: abrirEnMovil }, [svg('movil'), h('span', {}, 'Abrir en el móvil')]) : null,
         h('button', { class: 'tema', 'aria-label': 'Cambiar tema', onclick: function () { tema = tema === 'oscuro' ? 'claro' : 'oscuro'; aplicarTema(); pintar(); } }, [svg(tema === 'oscuro' ? 'sol' : 'luna'), h('span', {}, tema === 'oscuro' ? 'Tema claro' : 'Tema oscuro')]),
         h('button', { class: 'tema', onclick: configuracion }, [svg('engranaje'), h('span', {}, 'Configuración')]),
         D.actualizado ? h('span', { class: 'fecha' }, 'Actualizado el ' + D.actualizado) : null
       ])
     ]);
     var cuerpo = !desb[p.id] ? bloqueada(p) : p.id === 'conectores' ? vistaConectores() : p.id === 'skills' ? vistaSkills() : vistaApps();
-    raiz.appendChild(h('div', { class: 'app' }, [menu, h('main', { class: 'contenido' }, [h('p', { class: 'ceja' }, p.titulo), h('h1', {}, p.h1), h('p', { class: 'sub' }, p.sub), cuerpo])]));
+    var chip = con.corto ? h('span', { class: 'conexion ' + con.clase, title: con.largo }, [h('i'), con.corto]) : null;
+    var apagado = remoto && remoto.cargado && !remoto.conectado && !puente
+      ? h('div', { class: 'banda apagado' }, [h('i', { class: 'punto falla' }), h('span', { class: 'txt' }, [h('b', {}, 'Tu ordenador está apagado o dormido.'), ' Ahora solo se puede mirar. Cuando lo enciendas, podrás volver a cambiar cosas desde aquí.'])]) : null;
+    raiz.appendChild(h('div', { class: 'app' }, [menu, h('main', { class: 'contenido' }, [h('div', { class: 'ceja-fila' }, [h('p', { class: 'ceja' }, p.titulo), chip]), h('h1', {}, p.h1), h('p', { class: 'sub' }, p.sub), apagado, cuerpo])]));
     window.scrollTo(0, y);
   }
   aplicarTema(); aplicarMarca(); pintar(); comprobarPuente();

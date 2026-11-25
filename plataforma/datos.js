@@ -5,6 +5,8 @@ window.PLATAFORMA = {
   // cambia el nombre, las siglas (o un logo en `logo`, una dirección https) y los colores (`acento` y `acentoTexto`).
   marca: { nombre: "Tu plataforma", siglas: "T", subtitulo: "", logo: "", acento: "", acentoTexto: "" },
   cliente: "",
+  // La dirección de tu plataforma publicada (https://…vercel.app), si la tienes. Sirve para «Abrir en el móvil».
+  web: "",
   actualizado: "",
   // Cada pestaña se desbloquea cuando su prompt la rellena. Claude cambia aquí `false` por `true`.
   desbloqueado: { conectores: false, skills: false, apps: false },

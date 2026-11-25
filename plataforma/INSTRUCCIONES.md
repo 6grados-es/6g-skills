@@ -23,13 +23,21 @@ Tres pestañas, una por nivel: **Conectores** (nivel 1), **Skills y rutinas** (n
    Después marca cada una con `hecho: true`, quita `pendiente` (de la rutina o de `despues` en la skill) en `datos.js` y di en una línea qué has aplicado.
    - «Ejecutar ahora» no deja cambio: la web copia un texto para que lances la rutina en ese chat.
 9. Encender o apagar una skill lo hace ya el puente (mueve su carpeta entre `.claude/skills` y `.claude/skills-desactivadas`); para eso cada skill necesita su `ruta`.
+   - **PASO 0 de cada rutina «en tu ordenador»** (obligatorio al crear o cambiar una tarea programada local): el prompt de la tarea empieza así: «PASO 0 (siempre, antes de nada): lee `<carpeta de la plataforma>/datos.js`, busca en `rutinas` la que tiene `id: "<id>"` y mira `activa`. Si es false, la rutina está en pausa: termina ahora mismo sin hacer nada más». Así, pausar o activar desde la web (o desde el móvil) vale al momento, sin esperar a que Claude toque la tarea. El cambio `pausar-tarea`/`activar-tarea` se sigue apuntando; al aplicarlo, basta con comprobar que la tarea tiene su PASO 0. Las rutinas «en la nube» no ven `datos.js`: esas solo se pausan cuando Claude aplica el cambio.
 10. Marca: blanco y negro con el sistema de diseño de 6 Grados. Para adaptarla, solo `marca` (nombre, siglas, logo https, `acento` #rrggbb).
+11. **Publicada en internet y desde el móvil (puente web)**. Si la persona la quiere en su Vercel (o en el móvil), además de publicarla:
+   - Pon en `web` de `datos.js` su dirección publicada (`https://….vercel.app`).
+   - Deja el puente siempre en marcha: `node servidor.mjs emparejar` (crea la llave de este ordenador en `~/.config/plataforma/llave`; nunca la copies a `datos.js`, al chat ni a la carpeta) y `node servidor.mjs arranque` (Mac: LaunchAgent `es.6grados.plataforma`, arranca al encender y se reinicia solo; Windows: tarea programada al iniciar sesión, sin probar todavía). Comprueba que http://localhost:4700 responde.
+   - Dile que abra la plataforma en su ordenador y pulse «Abrir en el móvil»: sale un código QR (y «Copiar el enlace»). Al abrirlo en el móvil queda emparejado; el enlace lleva la llave, así que no se comparte. Si la web tiene la protección de Vercel, la primera vez el móvil pide entrar con su cuenta de Vercel (lo hace la persona).
+   - Desde la web publicada se puede encender y apagar skills, pausar y activar rutinas y quitar (o devolver) apps; se hace en el ordenador en unos segundos si está encendido, y la web dice «Ordenador conectado» o «Ordenador apagado». Lo demás (horarios, encadenar, renombrar, imagen) se cambia en el ordenador. Lo vivo lo lee la web del puente, así que **no hace falta volver a publicar por cada clic**: publica solo cuando cambies tú `datos.js` (conectores, skills, rutinas, apps nuevas), como mucho una vez por respuesta.
+   - Si la carpeta está en Documentos, iCloud o Google Drive y el registro (`~/.config/plataforma/registro.log`) dice «Operation not permitted», muévela a `~/Plataforma`.
+   - Para actualizar `index.html` y `servidor.mjs` en una plataforma ya instalada: `curl -fsSL https://raw.githubusercontent.com/6grados-es/6g-skills/main/plataforma/instalar.sh | PLATAFORMA_ACTUALIZAR=1 bash` (cambia solo los ficheros de la plantilla; `datos.js` y `cambios.json` no se tocan) y, si estaba con `arranque`, vuelve a lanzar `node servidor.mjs arranque`.
 
 ## Forma de `datos.js`
 ```js
 window.PLATAFORMA = {
   marca: { nombre, siglas, subtitulo, logo, acento },
-  cliente: "Nombre", actualizado: "22-11-2026",
+  cliente: "Nombre", actualizado: "22-11-2026", web: "https://…vercel.app" /* si está publicada */,
   desbloqueado: { conectores: false, skills: false, apps: false },
   prompts: { conectores: "…", skills: "…", apps: "…" },
   areas: { "Clientes": "🤝", "Correo": "✉️" },
