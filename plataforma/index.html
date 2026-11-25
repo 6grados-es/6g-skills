@@ -130,6 +130,7 @@ html[data-tema='oscuro'] .segmento button.on { background: #2a2526; }
 .interruptor { width: 44px; height: 26px; border-radius: 999px; border: 0; background: var(--linea-fuerte); position: relative; flex: none; padding: 0; transition: background .15s; }
 .interruptor::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .15s; }
 .interruptor.on { background: var(--ok); }
+.solo-mirar .interruptor { opacity: .4; cursor: not-allowed; }
 .interruptor.on::after { transform: translateX(18px); }
 .pendiente-aviso { font-size: 12px; color: var(--aviso); display: inline-flex; gap: 5px; align-items: center; }
 
@@ -1231,6 +1232,7 @@ button.chip-cuando.fijo { border-style: solid; color: var(--tinta); white-space:
         : remoto.conectado ? { clase: 'on', largo: 'Tu ordenador está conectado: lo que cambies se hace en él', corto: 'Ordenador conectado' }
         : { clase: 'off', largo: 'Tu ordenador está apagado o dormido: ahora solo se puede mirar', corto: 'Ordenador apagado' })
       : { clase: '', largo: 'Solo para mirar. Para cambiar cosas, ábrela con «Abrir plataforma»', corto: '' };
+    document.body.classList.toggle('solo-mirar', !!(enRemoto() && remoto.cargado && !remoto.conectado));
     var menu = h('nav', { class: 'menu' }, [
       h('div', { class: 'marca' }, [
         h('button', { class: 'marca-logo', 'aria-label': 'Cambiar la imagen', title: 'Cambiar la imagen', onclick: function (e) { menuImagen(e.currentTarget); } }, [imagenMarca(M) ? h('img', { src: M.logo, alt: '' }) : (M.siglas || inicial(M.nombre || 'T')), h('span', { class: 'cambiar' }, svg('camara'))]),
