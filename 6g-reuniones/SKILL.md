@@ -188,9 +188,10 @@ Se pueden hacer en cualquier reunión, como marcar.
 ### TRANSCRIPCIÓN
 
 1. Con el comando y Plaud conectado: `plaud <tipo> [--dia D]` dice qué grabación es (la que empieza a la hora de la reunión, sacada del calendario), y su estado. `--md` saca la transcripción literal con hablantes y minuto. Si aún no está transcrita, la API oficial de Plaud no puede pedirlo: da el enlace (`--procesar` lo imprime) para que la persona pulse «Generar» en Plaud. Si Plaud no está conectado en esa máquina (`~/.plaud/tokens.json`), `npx -y @plaud-ai/cli@0.3.15 login` lo conecta entrando con Google (hola@6grados.es → «Autorizar»), o invoca la skill `6g-plaud` (por el navegador). `bin/plaud-conectar.mjs` es solo para reconectar la web. Si no está instalada, dilo (README) y ofrece que peguen la transcripción.
-2. **No pegues la transcripción en la reunión.** Propón, en lista numerada, lo que saldría como líneas: Informar, Temas, Siguientes pasos, con persona y una idea por línea.
-3. Atribuye solo lo que tenga hablante de seguridad alta. Lo dudoso va aparte, sin persona.
-4. Con los números que elijan, aplica AÑADIR.
+2. **El minuto de cada tarea (desde el 25-nov-2026).** Cada casilla guarda cuándo se escribió (`creada` en `leer --json`). Si se escribió mientras se grababa, hora de inicio de la grabación + minuto = el trozo donde se dijo. `plaud <reunión> --pasos` saca cada casilla con su minuto (🎙 mm:ss) y lo dicho los 2 min de antes; para citar o dar contexto de una tarea, **empieza por ese trozo** y amplía hacia atrás o hacia delante mientras dure el tema. Solo las que salen en «Sin minuto» (escritas antes o después de grabar) se buscan por el texto en la transcripción entera. En la web, el botón 🎙 de la casilla abre la transcripción en ese punto. Pedro (25-nov): «si tenemos el tiempo exacto es buenísimo».
+3. **No pegues la transcripción en la reunión.** Propón, en lista numerada, lo que saldría como líneas: Informar, Temas, Siguientes pasos, con persona y una idea por línea.
+4. Atribuye solo lo que tenga hablante de seguridad alta. Lo dudoso va aparte, sin persona.
+5. Con los números que elijan, aplica AÑADIR.
 
 ### Reuniones sin formato
 
