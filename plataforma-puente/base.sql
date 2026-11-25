@@ -1,4 +1,4 @@
--- Puente web de la plataforma descargable (Supabase 6grados-curso). Aplicado el 25-nov-2026 (por partes, con execute_sql).
+-- Puente web de la plataforma descargable (Supabase embudo-6grados, xpwdxwnzyqudccrevemi). Pasado aquí desde 6grados-curso el 25-nov-2026.
 -- La web publicada (móvil) deja órdenes cerradas y el ordenador del cliente las recoge. Tablas cerradas (RLS sin
 -- políticas): solo se entra por las tres funciones, que comprueban la llave. El secreto se genera aquí y no sale.
 create schema if not exists privado;
