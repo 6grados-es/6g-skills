@@ -1,6 +1,6 @@
 // Lo común del puente web de la plataforma descargable. El «_» hace que Vercel no lo publique como función.
 // La web del cliente (en su Vercel, otro origen) y su ordenador hablan con estas funciones; ellas llaman a tres
-// funciones de la base (Supabase, proyecto 6grados-curso) que comprueban la llave y hacen el trabajo:
+// funciones de la base (Supabase, proyecto embudo-6grados) que comprueban la llave y hacen el trabajo:
 // plataforma_alta, plataforma_web y plataforma_agente. El secreto de las llaves vive solo dentro de la base.
 // Variables del proyecto Vercel: PUENTE_SUPABASE_URL y PUENTE_SUPABASE_CLAVE (la publicable: no da acceso a nada
 // por sí sola; las tablas están cerradas y solo se entra por esas funciones con una llave buena).
